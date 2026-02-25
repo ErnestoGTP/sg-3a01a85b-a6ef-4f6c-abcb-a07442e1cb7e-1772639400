@@ -1,81 +1,123 @@
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, MapPin, Users, DollarSign } from "lucide-react";
+import { Calendar, Clock, MapPin, Users, DollarSign, Award } from "lucide-react";
 import { workshopConfig } from "@/config/workshop";
+import { AnimatedSection } from "@/components/AnimatedSection";
 
-export function WorkshopDetails() {
-  const scrollToForm = () => {
-    const formElement = document.getElementById("registro");
-    if (formElement) {
-      formElement.scrollIntoView({ behavior: "smooth", block: "center" });
+interface WorkshopDetailsProps {
+  onCTAClick: () => void;
+}
+
+export function WorkshopDetails({ onCTAClick }: WorkshopDetailsProps) {
+  const details = [
+    {
+      icon: Award,
+      label: "Modalidad",
+      value: workshopConfig.event.modality
+    },
+    {
+      icon: Clock,
+      label: "Duración",
+      value: workshopConfig.event.duration
+    },
+    {
+      icon: Calendar,
+      label: "Fecha",
+      value: workshopConfig.event.date
+    },
+    {
+      icon: Clock,
+      label: "Hora",
+      value: workshopConfig.event.time
+    },
+    {
+      icon: MapPin,
+      label: "Ubicación",
+      value: `${workshopConfig.location.name}`,
+      note: workshopConfig.location.note
+    },
+    {
+      icon: DollarSign,
+      label: "Inversión",
+      value: workshopConfig.pricing.price,
+      highlight: true
+    },
+    {
+      icon: Users,
+      label: "Cupos",
+      value: `Máximo ${workshopConfig.event.maxSeats} personas`,
+      highlight: true
     }
-  };
+  ];
 
   return (
-    <section className="py-20 bg-gray-50">
+    <section className="py-20 bg-gradient-to-b from-white to-gray-50">
       <div className="container mx-auto px-4">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-[#0B1C2D] mb-4">
-            Detalles del Evento
-          </h2>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Todo lo que necesitas saber para tu transformación
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
-          {/* Date */}
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-[#C6A75E]/20 hover:border-[#C6A75E] transition-colors group">
-            <div className="w-12 h-12 rounded-full bg-[#0B1C2D]/5 flex items-center justify-center mb-4 group-hover:bg-[#C6A75E]/10 transition-colors">
-              <Calendar className="text-[#0B1C2D] group-hover:text-[#C6A75E] transition-colors" size={24} />
+        <AnimatedSection>
+          <div className="max-w-6xl mx-auto">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl md:text-5xl font-bold text-[#0B1C2D] mb-4">
+                Detalles del Taller
+              </h2>
+              <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+                Todo lo que necesitas saber para asegurar tu lugar
+              </p>
             </div>
-            <h3 className="font-semibold text-lg text-[#0B1C2D] mb-2">Fecha</h3>
-            <p className="text-gray-600">{workshopConfig.event.date}</p>
-          </div>
 
-          {/* Time */}
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-[#C6A75E]/20 hover:border-[#C6A75E] transition-colors group">
-            <div className="w-12 h-12 rounded-full bg-[#0B1C2D]/5 flex items-center justify-center mb-4 group-hover:bg-[#C6A75E]/10 transition-colors">
-              <Clock className="text-[#0B1C2D] group-hover:text-[#C6A75E] transition-colors" size={24} />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+              {details.map((detail, index) => {
+                const Icon = detail.icon;
+                return (
+                  <AnimatedSection key={index} delay={index * 0.1}>
+                    <div className={`
+                      group bg-white rounded-2xl p-6 border-2 transition-all duration-300 hover:-translate-y-2
+                      ${detail.highlight 
+                        ? "border-[#C6A75E] shadow-lg shadow-[#C6A75E]/20 hover:shadow-xl hover:shadow-[#C6A75E]/30" 
+                        : "border-gray-200 hover:border-[#C6A75E]/50 shadow-sm hover:shadow-md"
+                      }
+                    `}>
+                      <div className="flex items-start gap-4">
+                        <div className={`
+                          flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center
+                          ${detail.highlight 
+                            ? "bg-gradient-to-br from-[#C6A75E] to-[#d4b76f]" 
+                            : "bg-gradient-to-br from-[#0B1C2D] to-[#1a2f45]"
+                          }
+                          group-hover:scale-110 transition-transform
+                        `}>
+                          <Icon className={`w-6 h-6 ${detail.highlight ? "text-white" : "text-[#C6A75E]"}`} />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-sm font-semibold text-gray-600 mb-1">{detail.label}</p>
+                          <p className={`font-bold ${detail.highlight ? "text-[#C6A75E] text-lg" : "text-[#0B1C2D]"}`}>
+                            {detail.value}
+                          </p>
+                          {detail.note && (
+                            <p className="text-xs text-gray-500 mt-2 italic">{detail.note}</p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </AnimatedSection>
+                );
+              })}
             </div>
-            <h3 className="font-semibold text-lg text-[#0B1C2D] mb-2">Horario</h3>
-            <p className="text-gray-600">{workshopConfig.event.time}</p>
-            <p className="text-sm text-gray-400 mt-1">{workshopConfig.event.duration}</p>
-          </div>
 
-          {/* Location */}
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-[#C6A75E]/20 hover:border-[#C6A75E] transition-colors group">
-            <div className="w-12 h-12 rounded-full bg-[#0B1C2D]/5 flex items-center justify-center mb-4 group-hover:bg-[#C6A75E]/10 transition-colors">
-              <MapPin className="text-[#0B1C2D] group-hover:text-[#C6A75E] transition-colors" size={24} />
-            </div>
-            <h3 className="font-semibold text-lg text-[#0B1C2D] mb-2">Ubicación</h3>
-            <p className="text-gray-600 font-medium">{workshopConfig.location.name}</p>
-            <p className="text-sm text-gray-500 mt-1">{workshopConfig.location.address}</p>
-          </div>
-
-          {/* Investment */}
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-[#C6A75E]/20 hover:border-[#C6A75E] transition-colors group">
-            <div className="w-12 h-12 rounded-full bg-[#0B1C2D]/5 flex items-center justify-center mb-4 group-hover:bg-[#C6A75E]/10 transition-colors">
-              <DollarSign className="text-[#0B1C2D] group-hover:text-[#C6A75E] transition-colors" size={24} />
-            </div>
-            <h3 className="font-semibold text-lg text-[#0B1C2D] mb-2">Inversión</h3>
-            <p className="text-2xl font-bold text-[#C6A75E]">{workshopConfig.pricing.price}</p>
-            {workshopConfig.capacity.showSeatsRemaining && (
-              <div className="flex items-center gap-1 mt-2 text-xs text-red-500 font-medium">
-                <Users size={12} />
-                <span>¡Cupos limitados!</span>
+            <AnimatedSection delay={0.8}>
+              <div className="text-center bg-gradient-to-r from-[#0B1C2D] to-[#1a2f45] rounded-2xl p-8 shadow-xl">
+                <p className="text-white text-lg mb-6">
+                  <span className="font-bold text-[#C6A75E]">Inversión única:</span> {workshopConfig.pricing.price} — Pago completo
+                </p>
+                <Button
+                  onClick={onCTAClick}
+                  size="lg"
+                  className="bg-[#C6A75E] hover:bg-[#d4b76f] text-[#0B1C2D] font-bold text-lg px-8 py-6 rounded-full shadow-lg shadow-[#C6A75E]/30 hover:shadow-xl hover:shadow-[#C6A75E]/40 transition-all duration-300 hover:scale-105"
+                >
+                  Quiero asegurar mi lugar
+                </Button>
               </div>
-            )}
+            </AnimatedSection>
           </div>
-        </div>
-
-        <div className="text-center mt-12">
-          <Button 
-            onClick={scrollToForm}
-            className="bg-[#C6A75E] hover:bg-[#B8965A] text-white text-lg px-8 py-6 h-auto rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
-          >
-            Quiero asegurar mi lugar
-          </Button>
-        </div>
+        </AnimatedSection>
       </div>
     </section>
   );

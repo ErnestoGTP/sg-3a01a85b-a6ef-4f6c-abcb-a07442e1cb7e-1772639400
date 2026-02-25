@@ -6,62 +6,69 @@ export interface RegistrationData {
   phone: string;
 }
 
-export const generateEmailHtml = (data: RegistrationData) => {
+export function generateEmailHtml(data: RegistrationData): string {
+  const { name, email, phone } = data;
+  
   return `
 <!DOCTYPE html>
 <html>
 <head>
   <style>
-    body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; background-color: #f9fafb; margin: 0; padding: 0; }
-    .container { max-width: 600px; margin: 0 auto; padding: 20px; background-color: #ffffff; }
-    .header { background-color: #0B1C2D; padding: 30px 20px; text-align: center; }
-    .header h1 { color: #C6A75E; margin: 0; font-size: 24px; }
-    .content { padding: 30px 20px; }
-    .details-box { background-color: #f8f9fa; border-left: 4px solid #C6A75E; padding: 20px; margin: 20px 0; }
-    .footer { text-align: center; padding: 20px; font-size: 12px; color: #999; border-top: 1px solid #eee; }
-    .button { display: inline-block; padding: 12px 24px; background-color: #C6A75E; color: white; text-decoration: none; border-radius: 4px; font-weight: bold; margin-top: 20px; }
-    .info-item { margin-bottom: 10px; }
-    .label { font-weight: bold; color: #0B1C2D; }
+    body { font-family: sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background-color: #0B1C2D; padding: 20px; text-align: center; }
+    .header h1 { color: #C6A75E; margin: 0; }
+    .content { padding: 20px; background-color: #ffffff; }
+    .details { background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #C6A75E; }
+    .footer { text-align: center; font-size: 12px; color: #666; margin-top: 20px; }
+    .button { display: inline-block; padding: 10px 20px; background-color: #25D366; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; }
   </style>
 </head>
 <body>
   <div class="container">
     <div class="header">
-      <h1>¡Registro Confirmado!</h1>
+      <h1>Confirmación de Registro</h1>
     </div>
-    
     <div class="content">
-      <p>Hola <strong>${data.name}</strong>,</p>
+      <p>Hola <strong>${name}</strong>,</p>
       
-      <p>¡Felicidades! Has dado un gran paso para transformar tu comunicación y resultados. Tu lugar para el <strong>${workshopConfig.event.title}</strong> ha sido reservado correctamente.</p>
+      <p>¡Te has registrado exitosamente al <strong>${workshopConfig.event.title}</strong>!</p>
       
-      <div class="details-box">
-        <div class="info-item"><span class="label">📅 Fecha:</span> ${workshopConfig.event.date}</div>
-        <div class="info-item"><span class="label">⏰ Horario:</span> ${workshopConfig.event.time}</div>
-        <div class="info-item"><span class="label">📍 Ubicación:</span> ${workshopConfig.location.name}</div>
-        <div class="info-item"><span class="label">🗺️ Dirección:</span> ${workshopConfig.location.fullAddress}</div>
-        <div class="info-item"><span class="label">💰 Inversión:</span> ${workshopConfig.pricing.price}</div>
+      <p>Estamos emocionados de que nos acompañes en esta experiencia de transformación.</p>
+      
+      <div class="details">
+        <h3>Detalles del Evento:</h3>
+        <p><strong>📅 Fecha:</strong> ${workshopConfig.event.date}</p>
+        <p><strong>⏰ Hora:</strong> ${workshopConfig.event.time}</p>
+        <p><strong>📍 Ciudad:</strong> ${workshopConfig.location.city}</p>
+        <p><strong>💰 Inversión:</strong> ${workshopConfig.pricing.price} (Pago único)</p>
+        
+        <p style="margin-top: 15px; font-style: italic; color: #555;">
+          ℹ️ <strong>Importante:</strong> La ubicación exacta del lugar te la enviaremos en un segundo correo o vía WhatsApp antes del evento.
+        </p>
       </div>
 
-      <h3>📌 Próximos pasos:</h3>
-      <ol>
-        <li>Agenda la fecha en tu calendario.</li>
-        <li>Llega 15 minutos antes para el registro.</li>
-        <li>Prepárate para aprender y practicar.</li>
-      </ol>
+      <p><strong>Tus datos registrados:</strong></p>
+      <ul>
+        <li>Email: ${email}</li>
+        <li>Teléfono: ${phone}</li>
+      </ul>
 
-      <p>Si tienes alguna duda urgente, puedes contactarnos directamente por WhatsApp:</p>
-      
-      <center>
-        <a href="https://wa.me/${workshopConfig.contact.whatsappNumber.replace(/\+/g, "")}?text=${encodeURIComponent("Hola, tengo una duda sobre mi registro al taller.")}" class="button">
+      <div style="margin-top: 30px; text-align: center;">
+        <p>¿Tienes alguna duda o necesitas realizar tu pago?</p>
+        <a href="https://wa.me/${workshopConfig.contact.whatsappNumber.replace('+', '')}?text=Hola,%20recibí%20mi%20confirmación%20del%20taller%20de%20PNL.%20Tengo%20una%20duda." class="button">
           Contactar por WhatsApp
         </a>
-      </center>
+      </div>
+      
+      <p style="margin-top: 30px;">
+        <strong>Política de Cancelación:</strong><br>
+        Puedes cancelar tu asistencia hasta 48 horas antes del evento.
+      </p>
     </div>
-
     <div class="footer">
-      <p>© ${new Date().getFullYear()} ${workshopConfig.brand.name}. Todos los derechos reservados.</p>
-      <p>${workshopConfig.organizer.email} | ${workshopConfig.location.city}</p>
+      <p>© ${new Date().getFullYear()} ${workshopConfig.organizer.name}</p>
+      <p>Este correo fue enviado a ${email}</p>
     </div>
   </div>
 </body>

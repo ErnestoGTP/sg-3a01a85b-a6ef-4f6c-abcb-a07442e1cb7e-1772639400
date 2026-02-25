@@ -10,21 +10,31 @@ const registrationSchema = z.object({
   phone: z.string().min(8)
 });
 
-const requestTracker = new Map<string, number[]>();
-const RATE_LIMIT = 3;
-const RATE_LIMIT_WINDOW = 60000;
+// Simple in-memory rate limiting
+const RATE_LIMIT_WINDOW = 10 * 60 * 1000; // 10 minutes
+const MAX_REQUESTS = 3;
+const ipRequests = new Map<string, { count: number; timestamp: number }>();
 
 function checkRateLimit(ip: string): boolean {
   const now = Date.now();
-  const requests = requestTracker.get(ip) || [];
-  const recentRequests = requests.filter(time => now - time < RATE_LIMIT_WINDOW);
-  
-  if (recentRequests.length >= RATE_LIMIT) {
+  const record = ipRequests.get(ip);
+
+  if (!record) {
+    ipRequests.set(ip, { count: 1, timestamp: now });
+    return true;
+  }
+
+  if (now - record.timestamp > RATE_LIMIT_WINDOW) {
+    // Reset window
+    ipRequests.set(ip, { count: 1, timestamp: now });
+    return true;
+  }
+
+  if (record.count >= MAX_REQUESTS) {
     return false;
   }
-  
-  recentRequests.push(now);
-  requestTracker.set(ip, recentRequests);
+
+  record.count++;
   return true;
 }
 
@@ -33,15 +43,13 @@ export default async function handler(
   res: NextApiResponse
 ) {
   if (req.method !== "POST") {
-    return res.status(405).json({ error: "Método no permitido" });
+    return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const ip = (req.headers["x-forwarded-for"] as string)?.split(",")[0] || 
-              req.socket.remoteAddress || 
-              "unknown";
-
-  if (!checkRateLimit(ip)) {
-    return res.status(429).json({ error: "Demasiadas solicitudes. Intenta de nuevo en un minuto." });
+  // Rate Limiting
+  const clientIp = (req.headers["x-forwarded-for"] as string) || req.socket.remoteAddress || "unknown";
+  if (!checkRateLimit(clientIp)) {
+    return res.status(429).json({ error: "Demasiados intentos. Por favor intenta más tarde." });
   }
 
   try {
@@ -61,9 +69,9 @@ export default async function handler(
       });
 
       const mailOptions = {
-        from: process.env.EMAIL_FROM || `"${workshopConfig.brand.name}" <${process.env.SMTP_USER}>`,
+        from: '"Ramitap Training" <Ramitaptraining@gmail.com>',
         to: validatedData.email,
-        subject: `Confirmación de registro - ${workshopConfig.event.title}`,
+        subject: "Confirmación de registro – Taller Presencial de PNL (2 horas)",
         html: generateEmailHtml(validatedData),
       };
 

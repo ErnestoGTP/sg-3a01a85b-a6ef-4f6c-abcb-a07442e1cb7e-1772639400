@@ -6,6 +6,7 @@ import { WhatIsPNL } from "@/components/WhatIsPNL";
 import { WhatYouWillLearn } from "@/components/WhatYouWillLearn";
 import { WorkshopDetails } from "@/components/WorkshopDetails";
 import { BonusGuarantee } from "@/components/BonusGuarantee";
+import { Testimonials } from "@/components/Testimonials";
 import { RegistrationForm } from "@/components/RegistrationForm";
 import { FAQ } from "@/components/FAQ";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
@@ -30,9 +31,13 @@ export default function Home() {
         <ProblemSection />
         <WhatIsPNL />
         <WhatYouWillLearn />
-        <WorkshopDetails />
-        <BonusGuarantee />
         
+        <WorkshopDetails onCTAClick={scrollToForm} />
+        
+        <BonusGuarantee />
+
+        <Testimonials />
+
         <div ref={formRef} id="registro" className="py-20 bg-gradient-to-b from-white to-gray-50 relative overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-full overflow-hidden opacity-30 pointer-events-none">
             <div className="absolute -top-24 -right-24 w-96 h-96 bg-[#C6A75E]/20 rounded-full blur-3xl"></div>

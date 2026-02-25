@@ -9,6 +9,21 @@ interface HeroProps {
 }
 
 export function Hero({ onCTAClick }: HeroProps) {
+  /* 
+  VARIACIÓN 1 (ACTUAL): Enfoque comunicación
+  Título: "Habla con seguridad, sin traicionarte, en solo 2 horas"
+  
+  VARIACIÓN 2 (COMENTADA): Enfoque transformación
+  Título: "Reprograma tu mente en 2 horas y toma el control"
+  Subtítulo: Taller presencial de PNL con Ramitap Training para detectar patrones que te limitan, 
+  aprender técnicas de reprogramación mental y empezar a tomar decisiones más alineadas contigo.
+  
+  VARIACIÓN 3 (COMENTADA): Enfoque resultados
+  Título: "Deja de sabotearte y empieza a actuar con claridad"
+  Subtítulo: Taller presencial de PNL con Ramitap Training para reconocer tus bloqueos mentales, 
+  eliminar el autosabotaje y recuperar la confianza para comunicarte y decidir sin miedo.
+  */
+
   return (
     <section className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0B1C2D] via-[#1a2f45] to-[#0B1C2D] text-white overflow-hidden">
       {/* Decorative elements */}
@@ -40,7 +55,7 @@ export function Hero({ onCTAClick }: HeroProps) {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#C6A75E] opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-[#C6A75E]"></span>
             </span>
-            <span className="text-[#C6A75E] text-sm font-medium">Cupos Limitados • Solo 7 plazas disponibles</span>
+            <span className="text-[#C6A75E] text-sm font-medium">Cupos Limitados • Máximo 15 personas</span>
           </motion.div>
 
           {/* Main Title */}
@@ -50,9 +65,9 @@ export function Hero({ onCTAClick }: HeroProps) {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="text-5xl md:text-7xl font-bold mb-6 leading-tight"
           >
-            Descubre el Poder de tu
+            Habla con seguridad,
             <span className="block text-transparent bg-clip-text bg-gradient-to-r from-[#C6A75E] to-[#d4b76f]">
-              Mente en Solo 2 Horas
+              sin traicionarte, en solo 2 horas
             </span>
           </motion.h1>
 
@@ -63,7 +78,7 @@ export function Hero({ onCTAClick }: HeroProps) {
             transition={{ duration: 0.6, delay: 0.4 }}
             className="text-xl md:text-2xl mb-8 text-gray-300 max-w-3xl mx-auto leading-relaxed"
           >
-            Taller presencial práctico de Programación Neurolingüística para transformar tu comunicación, seguridad y resultados personales.
+            Taller presencial de PNL con <span className="text-[#C6A75E] font-semibold">Ramitap Training</span> para dejar de trabarte al hablar, expresar lo que realmente piensas y sentirte más seguro en conversaciones importantes, sin perder tu autenticidad.
           </motion.p>
 
           {/* Benefits */}
@@ -74,9 +89,9 @@ export function Hero({ onCTAClick }: HeroProps) {
             className="flex flex-wrap justify-center gap-6 mb-10"
           >
             {[
-              "Sin experiencia previa",
-              "100% práctico",
-              "Cupos limitados"
+              "No necesitas experiencia previa",
+              "100% práctico, cero teoría pesada",
+              "Grupo reducido y cupos limitados"
             ].map((benefit, index) => (
               <motion.div 
                 key={index}
@@ -106,7 +121,7 @@ export function Hero({ onCTAClick }: HeroProps) {
               Reservar mi lugar
             </Button>
             <p className="text-sm text-gray-400 max-w-md mx-auto">
-              Recibirás un correo con condiciones y ubicación exacta
+              Al confirmar tu asistencia, recibirás por correo la ubicación exacta en Hermosillo y las condiciones del taller
             </p>
           </motion.div>
         </div>

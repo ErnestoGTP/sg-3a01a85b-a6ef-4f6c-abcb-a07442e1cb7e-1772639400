@@ -75,7 +75,7 @@ export function RegistrationForm() {
               ¡Registro Exitoso!
             </h2>
             <p className="text-lg text-gray-700 mb-6 leading-relaxed">
-              Hemos enviado un correo de confirmación con todos los detalles del taller a tu email.
+              Revisa tu correo para ver la ubicación exacta en Hermosillo, la fecha, la hora y las condiciones del taller.
             </p>
             <div className="space-y-4 text-left bg-white rounded-xl p-6 border border-green-200">
               <p className="text-gray-700">
@@ -191,7 +191,7 @@ export function RegistrationForm() {
           </div>
 
           <p className="text-center text-sm text-gray-500 mt-4">
-            Al registrarte, aceptas recibir información sobre el taller por email y WhatsApp
+            Tus datos solo se usarán para enviarte información de este taller y recordatorios importantes.
           </p>
         </form>
       </div>
