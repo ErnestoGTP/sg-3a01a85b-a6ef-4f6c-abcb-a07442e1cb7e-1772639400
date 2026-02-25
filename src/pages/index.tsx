@@ -10,6 +10,8 @@ import { Testimonials } from "@/components/Testimonials";
 import { RegistrationForm } from "@/components/RegistrationForm";
 import { FAQ } from "@/components/FAQ";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
+import { TrainerSection } from "@/components/TrainerSection";
+import { workshopConfig } from "@/config/workshop";
 
 export default function Home() {
   const formRef = useRef<HTMLDivElement>(null);
@@ -21,29 +23,23 @@ export default function Home() {
   return (
     <>
       <SEO
-        title="Taller Presencial de PNL Básica - 2 Horas de Transformación"
-        description="Descubre el poder de tu mente en solo 2 horas. Taller práctico de Programación Neurolingüística para transformar tu comunicación y seguridad personal. Cupos limitados."
-        image="/og-image.png"
+        title={workshopConfig.seo.title}
+        description={workshopConfig.seo.description}
+        image={workshopConfig.seo.ogImage}
+        url="/"
       />
       
-      <main className="min-h-screen relative">
+      <main>
         <Hero onCTAClick={scrollToForm} />
         <ProblemSection />
         <WhatIsPNL />
         <WhatYouWillLearn />
-        
+        <TrainerSection />
         <WorkshopDetails onCTAClick={scrollToForm} />
-        
         <BonusGuarantee />
-
         <Testimonials />
 
-        <div ref={formRef} id="registro" className="py-20 bg-gradient-to-b from-white to-gray-50 relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-full overflow-hidden opacity-30 pointer-events-none">
-            <div className="absolute -top-24 -right-24 w-96 h-96 bg-[#C6A75E]/20 rounded-full blur-3xl"></div>
-            <div className="absolute top-1/2 -left-24 w-72 h-72 bg-[#0B1C2D]/10 rounded-full blur-3xl"></div>
-          </div>
-
+        <div ref={formRef} id="registro" className="py-20 bg-gradient-to-b from-gray-50 to-white">
           <div className="container mx-auto px-4 relative z-10">
             <RegistrationForm />
           </div>
