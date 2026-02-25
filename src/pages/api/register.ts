@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { z } from "zod";
-import { generateConfirmationEmail, RegistrationData } from "@/lib/email";
+import { generateEmailHtml, RegistrationData } from "@/lib/email";
 import nodemailer from "nodemailer";
 import { workshopConfig } from "@/config/workshop";
 
@@ -52,26 +52,22 @@ export default async function handler(
     if (emailEnabled) {
       const transporter = nodemailer.createTransport({
         host: process.env.SMTP_HOST || "smtp.gmail.com",
-        port: parseInt(process.env.SMTP_PORT || "587"),
+        port: Number(process.env.SMTP_PORT) || 587,
         secure: process.env.SMTP_SECURE === "true",
         auth: {
           user: process.env.SMTP_USER,
-          pass: process.env.SMTP_PASSWORD
-        }
-      });
-
-      const emailHtml = generateConfirmationEmail(validatedData);
-
-      await transporter.sendMail({
-        from: {
-          name: workshopConfig.email.fromName,
-          address: process.env.SMTP_USER || workshopConfig.email.fromEmail
+          pass: process.env.SMTP_PASS,
         },
-        to: validatedData.email,
-        replyTo: workshopConfig.email.replyTo,
-        subject: `Confirmación de Registro - ${workshopConfig.event.title}`,
-        html: emailHtml
       });
+
+      const mailOptions = {
+        from: process.env.EMAIL_FROM || `"${workshopConfig.brand.name}" <${process.env.SMTP_USER}>`,
+        to: validatedData.email,
+        subject: `Confirmación de registro - ${workshopConfig.event.title}`,
+        html: generateEmailHtml(validatedData),
+      };
+
+      await transporter.sendMail(mailOptions);
 
       console.log(`✅ Registration email sent to: ${validatedData.email}`);
     } else {

@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useRef } from "react";
 import { SEO } from "@/components/SEO";
 import { Hero } from "@/components/Hero";
 import { ProblemSection } from "@/components/ProblemSection";
@@ -14,7 +14,7 @@ export default function Home() {
   const formRef = useRef<HTMLDivElement>(null);
 
   const scrollToForm = () => {
-    formRef.current?.scrollIntoView({ behavior: "smooth" });
+    formRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
   };
 
   return (
@@ -30,11 +30,10 @@ export default function Home() {
         <ProblemSection />
         <WhatIsPNL />
         <WhatYouWillLearn />
-        <WorkshopDetails onCTAClick={scrollToForm} />
+        <WorkshopDetails />
         <BonusGuarantee />
         
-        <div ref={formRef} className="py-20 bg-gradient-to-b from-white to-gray-50 relative overflow-hidden">
-          {/* Background decoration */}
+        <div ref={formRef} id="registro" className="py-20 bg-gradient-to-b from-white to-gray-50 relative overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-full overflow-hidden opacity-30 pointer-events-none">
             <div className="absolute -top-24 -right-24 w-96 h-96 bg-[#C6A75E]/20 rounded-full blur-3xl"></div>
             <div className="absolute top-1/2 -left-24 w-72 h-72 bg-[#0B1C2D]/10 rounded-full blur-3xl"></div>
@@ -47,18 +46,6 @@ export default function Home() {
 
         <FAQ />
         
-        <footer className="bg-[#0B1C2D] text-white py-12 border-t border-[#C6A75E]/20">
-          <div className="container mx-auto px-4 text-center">
-            <p className="font-bold text-xl mb-4 text-white">PNL Fundamental</p>
-            <p className="text-gray-400 text-sm mb-6">
-              Transformando vidas a través de la comunicación consciente.
-            </p>
-            <p className="text-gray-500 text-xs">
-              © {new Date().getFullYear()} Instituto PNL Fundamental. Todos los derechos reservados.
-            </p>
-          </div>
-        </footer>
-
         <WhatsAppButton />
       </main>
     </>
