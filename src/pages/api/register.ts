@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { z } from "zod";
-import { generateConfirmationEmail } from "@/lib/email";
+import { generateConfirmationEmail, RegistrationData } from "@/lib/email";
 import nodemailer from "nodemailer";
 import { workshopConfig } from "@/config/workshop";
 
@@ -45,7 +45,7 @@ export default async function handler(
   }
 
   try {
-    const validatedData = registrationSchema.parse(req.body);
+    const validatedData = registrationSchema.parse(req.body) as RegistrationData;
 
     const emailEnabled = process.env.EMAIL_ENABLED === "true";
     
