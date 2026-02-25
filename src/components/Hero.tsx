@@ -1,3 +1,6 @@
+"use client";
+
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2 } from "lucide-react";
 
@@ -10,50 +13,91 @@ export function Hero({ onCTAClick }: HeroProps) {
     <section className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0B1C2D] via-[#1a2f45] to-[#0B1C2D] text-white overflow-hidden">
       {/* Decorative elements */}
       <div className="absolute inset-0 opacity-10">
-        <div className="absolute top-20 left-10 w-72 h-72 bg-[#C6A75E] rounded-full blur-3xl"></div>
-        <div className="absolute bottom-20 right-10 w-96 h-96 bg-[#C6A75E] rounded-full blur-3xl"></div>
+        <motion.div 
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 0.1 }}
+          transition={{ duration: 1.5 }}
+          className="absolute top-20 left-10 w-72 h-72 bg-[#C6A75E] rounded-full blur-3xl"
+        />
+        <motion.div 
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 0.1 }}
+          transition={{ duration: 1.5, delay: 0.2 }}
+          className="absolute bottom-20 right-10 w-96 h-96 bg-[#C6A75E] rounded-full blur-3xl"
+        />
       </div>
 
       <div className="container mx-auto px-4 py-20 relative z-10">
         <div className="max-w-4xl mx-auto text-center">
           {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#C6A75E]/10 border border-[#C6A75E]/30 rounded-full mb-8">
+          <motion.div 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-[#C6A75E]/10 border border-[#C6A75E]/30 rounded-full mb-8"
+          >
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#C6A75E] opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-[#C6A75E]"></span>
             </span>
             <span className="text-[#C6A75E] text-sm font-medium">Cupos Limitados • Solo 7 plazas disponibles</span>
-          </div>
+          </motion.div>
 
           {/* Main Title */}
-          <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight">
+          <motion.h1 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="text-5xl md:text-7xl font-bold mb-6 leading-tight"
+          >
             Descubre el Poder de tu
             <span className="block text-transparent bg-clip-text bg-gradient-to-r from-[#C6A75E] to-[#d4b76f]">
               Mente en Solo 2 Horas
             </span>
-          </h1>
+          </motion.h1>
 
           {/* Subtitle */}
-          <p className="text-xl md:text-2xl mb-8 text-gray-300 max-w-3xl mx-auto leading-relaxed">
+          <motion.p 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+            className="text-xl md:text-2xl mb-8 text-gray-300 max-w-3xl mx-auto leading-relaxed"
+          >
             Taller presencial práctico de Programación Neurolingüística para transformar tu comunicación, seguridad y resultados personales.
-          </p>
+          </motion.p>
 
           {/* Benefits */}
-          <div className="flex flex-wrap justify-center gap-6 mb-10">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.6 }}
+            className="flex flex-wrap justify-center gap-6 mb-10"
+          >
             {[
               "Sin experiencia previa",
               "100% práctico",
               "Cupos limitados"
             ].map((benefit, index) => (
-              <div key={index} className="flex items-center gap-2">
+              <motion.div 
+                key={index}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.4, delay: 0.8 + index * 0.1 }}
+                className="flex items-center gap-2"
+              >
                 <CheckCircle2 className="w-5 h-5 text-[#C6A75E]" />
                 <span className="text-gray-200">{benefit}</span>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
 
           {/* CTA Button */}
-          <div className="space-y-4">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 1 }}
+            className="space-y-4"
+          >
             <Button
               onClick={onCTAClick}
               size="lg"
@@ -64,7 +108,7 @@ export function Hero({ onCTAClick }: HeroProps) {
             <p className="text-sm text-gray-400 max-w-md mx-auto">
               Recibirás un correo con condiciones y ubicación exacta
             </p>
-          </div>
+          </motion.div>
         </div>
       </div>
 
