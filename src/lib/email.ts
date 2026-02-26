@@ -47,7 +47,7 @@ export function generateEmailHtml(data: RegistrationData): string {
               </p>
 
               <p style="margin: 0 0 20px 0; color: #333333; font-size: 16px; line-height: 1.6;">
-                Este taller será facilitado por <strong style="color: #C6A75E;">${workshopConfig.trainer.name}</strong>, ${workshopConfig.trainer.title}, parte de ${workshopConfig.brand.name}.
+                Este taller será facilitado por <strong style="color: #C6A75E;">${workshopConfig.trainer.name}</strong>, ${workshopConfig.trainer.title}, instructor certificado en el Estándar de Competencia <strong>EC0217.01 "Impartición de cursos de formación del capital humano de manera presencial grupal"</strong>, avalado por SEP–CONOCER (Folio <strong>D-0000928026</strong>).
               </p>
 
               <!-- Event Details Box -->
