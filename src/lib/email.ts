@@ -1,4 +1,5 @@
 import { workshopConfig } from "@/config/workshop";
+import nodemailer from "nodemailer";
 
 export interface RegistrationData {
   name: string;
@@ -117,7 +118,45 @@ export function generateEmailHtml(data: RegistrationData): string {
   `.trim();
 }
 
-export async function sendRegistrationEmail(data: RegistrationData): Promise<void> {
-  // Email sending logic will be handled in the API route
-  // This function generates the HTML template
+export async function sendConfirmationEmail(data: RegistrationData): Promise<boolean> {
+  try {
+    // Check if email is enabled
+    if (process.env.EMAIL_ENABLED !== "true") {
+      console.log("📧 Email is disabled (EMAIL_ENABLED !== true)");
+      return false;
+    }
+
+    // Check if credentials are present
+    if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+      console.error("❌ SMTP credentials missing");
+      return false;
+    }
+
+    // Create transporter
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST || "smtp.gmail.com",
+      port: Number(process.env.SMTP_PORT) || 587,
+      secure: process.env.SMTP_SECURE === "true",
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+    });
+
+    // Email options
+    const mailOptions = {
+      from: process.env.EMAIL_FROM || '"Ramitap Training" <Ramitaptraining@gmail.com>',
+      to: data.email,
+      subject: "Confirmación de registro – Taller Presencial de PNL (2 horas)",
+      html: generateEmailHtml(data),
+    };
+
+    // Send email
+    await transporter.sendMail(mailOptions);
+    console.log(`✅ Confirmation email sent to: ${data.email}`);
+    return true;
+  } catch (error) {
+    console.error("❌ Error sending email:", error);
+    return false;
+  }
 }

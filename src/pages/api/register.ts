@@ -1,8 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { z } from "zod";
-import { generateEmailHtml, RegistrationData } from "@/lib/email";
-import nodemailer from "nodemailer";
-import { workshopConfig } from "@/config/workshop";
+import { sendConfirmationEmail, RegistrationData } from "@/lib/email";
 
 const registrationSchema = z.object({
   name: z.string().min(3),
@@ -55,38 +53,26 @@ export default async function handler(
   try {
     const validatedData = registrationSchema.parse(req.body) as RegistrationData;
 
-    const emailEnabled = process.env.EMAIL_ENABLED === "true";
-    
-    if (emailEnabled) {
-      const transporter = nodemailer.createTransport({
-        host: process.env.SMTP_HOST || "smtp.gmail.com",
-        port: Number(process.env.SMTP_PORT) || 587,
-        secure: process.env.SMTP_SECURE === "true",
-        auth: {
-          user: process.env.SMTP_USER,
-          pass: process.env.SMTP_PASS,
-        },
+    console.log("📝 Registration attempt:", validatedData.email);
+
+    // Try to send email
+    const emailSent = await sendConfirmationEmail(validatedData);
+
+    if (emailSent) {
+      console.log(`✅ Registration successful with email sent: ${validatedData.email}`);
+      return res.status(200).json({ 
+        success: true, 
+        message: "Registro exitoso. Revisa tu email para la confirmación.",
+        emailSent: true
       });
-
-      const mailOptions = {
-        from: '"Ramitap Training" <Ramitaptraining@gmail.com>',
-        to: validatedData.email,
-        subject: "Confirmación de registro – Taller Presencial de PNL (2 horas)",
-        html: generateEmailHtml(validatedData),
-      };
-
-      await transporter.sendMail(mailOptions);
-
-      console.log(`✅ Registration email sent to: ${validatedData.email}`);
     } else {
-      console.log("📧 Email disabled - Registration data:", validatedData);
+      console.log(`⚠️ Registration successful but email not sent: ${validatedData.email}`);
+      return res.status(200).json({ 
+        success: true, 
+        message: "Registro exitoso. Te contactaremos pronto por WhatsApp.",
+        emailSent: false
+      });
     }
-
-    res.status(200).json({ 
-      success: true, 
-      message: "Registro exitoso. Revisa tu email para la confirmación.",
-      emailSent: emailEnabled
-    });
 
   } catch (error) {
     console.error("❌ Registration error:", error);
