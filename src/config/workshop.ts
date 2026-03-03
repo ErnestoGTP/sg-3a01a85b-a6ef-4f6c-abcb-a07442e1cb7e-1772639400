@@ -9,7 +9,7 @@ export const workshopConfig = {
   event: {
     title: "Taller Presencial de PNL Básica – 2 Horas",
     subtitle: "Transforma tu comunicación y seguridad personal en una sola sesión",
-    date: "Domingo 15 de Marzo, 2026",
+    date: "Sábado 21 de Marzo, 2026",
     time: "10:00 AM - 12:00 PM",
     duration: "2 horas intensivas",
     modality: "Presencial",
