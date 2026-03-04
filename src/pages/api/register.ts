@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import nodemailer from "nodemailer";
 import QRCode from "qrcode";
 import { z } from "zod";
+import { supabase } from "@/integrations/supabase/client";
 
 // Validation schema
 const registrationSchema = z.object({
@@ -41,11 +42,14 @@ export default async function handler(
       });
     }
 
+    // Generate unique QR code ID
+    const qrCodeId = `PNL-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
     // Generate QR code
     let qrCodeDataUrl = "";
     try {
       console.log("🔄 Generating QR code...");
-      const qrString = `Registro Taller PNL | Nombre: ${name} | Email: ${email} | Tel: ${phone}`;
+      const qrString = `QR:${qrCodeId}|Name:${name}|Email:${email}|Phone:${phone}`;
       qrCodeDataUrl = await QRCode.toDataURL(qrString, {
         errorCorrectionLevel: "H",
         type: "image/png",
@@ -56,6 +60,31 @@ export default async function handler(
     } catch (qrError) {
       console.error("⚠️ QR generation failed:", qrError);
       // Continue without QR - not critical
+    }
+
+    // Save to database (non-blocking)
+    try {
+      console.log("💾 Saving participant to database...");
+      const { data: participant, error: dbError } = await supabase
+        .from("participants")
+        .insert({
+          name,
+          email,
+          phone,
+          qr_code_id: qrCodeId,
+          payment_status: "pending",
+          attendance_status: "pending"
+        })
+        .select()
+        .single();
+
+      if (dbError) {
+        console.error("⚠️ Database save failed (non-critical):", dbError);
+      } else {
+        console.log("✅ Participant saved to database:", participant.id);
+      }
+    } catch (dbError) {
+      console.error("⚠️ Database error (non-critical):", dbError);
     }
 
     // Send email (CRITICAL: Non-blocking, always return success)
