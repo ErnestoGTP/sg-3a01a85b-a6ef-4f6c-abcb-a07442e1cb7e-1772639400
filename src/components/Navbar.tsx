@@ -62,7 +62,7 @@ export function Navbar() {
             >
               <Logo variant="light" size="sm" />
               <span className="hidden sm:inline text-white font-semibold text-lg">
-                {workshopConfig.brand.name}
+                {workshopConfig.brand.tagline}
               </span>
             </Link>
 
