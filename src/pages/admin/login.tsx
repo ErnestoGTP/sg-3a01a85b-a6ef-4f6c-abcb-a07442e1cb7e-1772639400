@@ -294,13 +294,14 @@ export default function AdminLogin() {
                 </Button>
 
                 <div className="text-center">
-                  <button
-                    type="button"
-                    onClick={() => setShowRecovery(true)}
-                    className="text-sm text-gray-400 hover:text-[#C6A75E] transition-colors"
-                  >
-                    ¿Olvidaste tu contraseña?
-                  </button>
+                  <Link href="/admin/forgot-password">
+                    <button
+                      type="button"
+                      className="text-sm text-gray-400 hover:text-[#C6A75E] transition-colors"
+                    >
+                      ¿Olvidaste tu contraseña?
+                    </button>
+                  </Link>
                 </div>
               </form>
             </>
