@@ -3,13 +3,14 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2 } from "lucide-react";
-import { workshopConfig } from "@/config/workshop";
+import { workshopConfig as defaultConfig } from "@/config/workshop";
 
 interface HeroProps {
   onCTAClick: () => void;
+  config?: typeof defaultConfig;
 }
 
-export function Hero({ onCTAClick }: HeroProps) {
+export function Hero({ onCTAClick, config = defaultConfig }: HeroProps) {
   const benefits = [
     "No necesitas experiencia previa",
     "100% práctico, cero teoría pesada",
@@ -44,8 +45,8 @@ export function Hero({ onCTAClick }: HeroProps) {
           {/* Subtitle */}
           <p className="text-lg md:text-xl text-gray-300 mb-4 max-w-3xl mx-auto leading-relaxed">
             Taller presencial de PNL con <span className="font-semibold text-white">Ramitap Training</span> y{" "}
-            <span className="font-semibold text-[#C6A75E]">{workshopConfig.trainer.name}</span>,{" "}
-            {workshopConfig.trainer.title}, para dejar de trabarte al hablar, expresar lo que realmente piensas
+            <span className="font-semibold text-[#C6A75E]">{config.trainer.name}</span>,{" "}
+            {config.trainer.title}, para dejar de trabarte al hablar, expresar lo que realmente piensas
             y sentirte más seguro en conversaciones importantes.
           </p>
 
@@ -56,7 +57,7 @@ export function Hero({ onCTAClick }: HeroProps) {
             transition={{ delay: 0.3, duration: 0.6 }}
             className="text-sm md:text-base text-[#C6A75E]/90 mb-8 italic"
           >
-            Facilitado por {workshopConfig.trainer.name}, {workshopConfig.trainer.title}
+            Facilitado por {config.trainer.name}, {config.trainer.title}
           </motion.p>
 
           {/* Benefits */}

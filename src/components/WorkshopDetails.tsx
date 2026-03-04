@@ -1,50 +1,51 @@
 import { Button } from "@/components/ui/button";
 import { Calendar, Clock, MapPin, Users, DollarSign, Award } from "lucide-react";
-import { workshopConfig } from "@/config/workshop";
+import { workshopConfig as defaultConfig } from "@/config/workshop";
 import { AnimatedSection } from "@/components/AnimatedSection";
 
 interface WorkshopDetailsProps {
   onCTAClick: () => void;
+  config?: typeof defaultConfig;
 }
 
-export function WorkshopDetails({ onCTAClick }: WorkshopDetailsProps) {
+export function WorkshopDetails({ onCTAClick, config = defaultConfig }: WorkshopDetailsProps) {
   const details = [
     {
       icon: Award,
       label: "Modalidad",
-      value: workshopConfig.event.modality
+      value: config.event.modality
     },
     {
       icon: Clock,
       label: "Duración",
-      value: workshopConfig.event.duration
+      value: config.event.duration
     },
     {
       icon: Calendar,
       label: "Fecha",
-      value: workshopConfig.event.date
+      value: config.event.date
     },
     {
       icon: Clock,
       label: "Hora",
-      value: workshopConfig.event.time
+      value: config.event.time
     },
     {
       icon: MapPin,
       label: "Ubicación",
-      value: `${workshopConfig.location.name}`,
-      note: workshopConfig.location.note
+      value: `${config.location.name}`,
+      note: config.location.note
     },
     {
       icon: DollarSign,
       label: "Inversión",
-      value: workshopConfig.pricing.price,
+      value: config.pricing.price,
       highlight: true
     },
     {
       icon: Users,
       label: "Cupos",
-      value: `Máximo ${workshopConfig.event.maxSeats} personas`,
+      value: `Máximo ${config.event.maxSeats} personas`,
       highlight: true
     }
   ];
@@ -105,7 +106,7 @@ export function WorkshopDetails({ onCTAClick }: WorkshopDetailsProps) {
             <AnimatedSection delay={0.8}>
               <div className="text-center bg-gradient-to-r from-[#0B1C2D] to-[#1a2f45] rounded-2xl p-8 shadow-xl">
                 <p className="text-white text-lg mb-6">
-                  <span className="font-bold text-[#C6A75E]">Inversión única:</span> {workshopConfig.pricing.price} — Pago completo
+                  <span className="font-bold text-[#C6A75E]">Inversión única:</span> {config.pricing.price} — Pago completo
                 </p>
                 <Button
                   onClick={onCTAClick}

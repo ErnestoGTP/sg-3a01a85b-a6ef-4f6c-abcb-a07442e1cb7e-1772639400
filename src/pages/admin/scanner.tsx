@@ -208,7 +208,6 @@ export default function QRScanner() {
                       facingMode: "environment"
                     }}
                     components={{
-                      audio: false,
                       finder: true
                     }}
                   />
