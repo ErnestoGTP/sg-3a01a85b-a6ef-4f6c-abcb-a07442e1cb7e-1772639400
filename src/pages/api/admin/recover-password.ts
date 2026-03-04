@@ -1,7 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { supabase } from "@/integrations/supabase/client";
 import nodemailer from "nodemailer";
 import crypto from "crypto";
+import fs from "fs";
+import path from "path";
 
 export default async function handler(
   req: NextApiRequest,
@@ -20,8 +21,15 @@ export default async function handler(
 
     // Verify this is the admin email
     const adminEmail = process.env.ADMIN_EMAIL;
-    if (email.toLowerCase() !== adminEmail?.toLowerCase()) {
+    
+    if (!adminEmail) {
+      console.error("❌ ADMIN_EMAIL not configured in .env.local");
+      return res.status(500).json({ error: "Server configuration error" });
+    }
+
+    if (email.toLowerCase() !== adminEmail.toLowerCase()) {
       // Return success anyway to prevent email enumeration
+      console.log("⚠️ Recovery attempt for non-admin email:", email);
       return res.status(200).json({
         success: true,
         message: "Si el email existe, recibirás un link de recuperación"
@@ -32,52 +40,90 @@ export default async function handler(
     const token = crypto.randomBytes(32).toString("hex");
     const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
 
-    // Save token to database
-    const { error: dbError } = await supabase
-      .from("password_reset_tokens")
-      .insert({
-        email: email.toLowerCase(),
-        token,
-        expires_at: expiresAt.toISOString()
-      });
+    // Try to save token to database (may fail if Supabase is down)
+    let tokenSavedToDB = false;
+    try {
+      const { supabase } = await import("@/integrations/supabase/client");
+      const { error: dbError } = await supabase
+        .from("password_reset_tokens")
+        .insert({
+          email: email.toLowerCase(),
+          token,
+          expires_at: expiresAt.toISOString()
+        });
 
-    if (dbError) {
-      console.error("Database error:", dbError);
-      throw new Error("Failed to create reset token");
+      if (!dbError) {
+        tokenSavedToDB = true;
+        console.log("✅ Password reset token saved to database");
+      } else {
+        console.error("⚠️ Database unavailable, using fallback method");
+      }
+    } catch (dbError) {
+      console.error("⚠️ Database connection failed, using fallback method");
+    }
+
+    // Fallback: Save token to local file if DB is unavailable
+    if (!tokenSavedToDB) {
+      try {
+        const tokensDir = path.join(process.cwd(), ".tokens");
+        if (!fs.existsSync(tokensDir)) {
+          fs.mkdirSync(tokensDir, { recursive: true });
+        }
+        
+        const tokenData = {
+          email: email.toLowerCase(),
+          token,
+          expires_at: expiresAt.toISOString(),
+          created_at: new Date().toISOString()
+        };
+        
+        fs.writeFileSync(
+          path.join(tokensDir, `${token}.json`),
+          JSON.stringify(tokenData, null, 2)
+        );
+        
+        console.log("✅ Password reset token saved to local file (fallback)");
+      } catch (fileError) {
+        console.error("❌ Failed to save token to file:", fileError);
+        return res.status(500).json({ error: "Error al procesar la solicitud" });
+      }
     }
 
     // Send email with reset link
     const emailEnabled = process.env.EMAIL_ENABLED === "true";
     
     if (emailEnabled) {
-      const transporter = nodemailer.createTransport({
-        host: process.env.SMTP_HOST,
-        port: parseInt(process.env.SMTP_PORT || "465"),
-        secure: true,
-        auth: {
-          user: process.env.SMTP_USER,
-          pass: process.env.SMTP_PASS,
-        },
-      });
-
-      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 
-                      `${req.headers["x-forwarded-proto"] || "http"}://${req.headers.host}`;
-      const resetLink = `${baseUrl}/admin/reset-password?token=${token}`;
-
-      const mailOptions = {
-        from: process.env.EMAIL_FROM || process.env.SMTP_USER,
-        to: email,
-        subject: "Recuperación de Contraseña - Admin Dashboard",
-        html: generateRecoveryEmail(resetLink, email),
-      };
-
       try {
+        const transporter = nodemailer.createTransport({
+          host: process.env.SMTP_HOST,
+          port: parseInt(process.env.SMTP_PORT || "465"),
+          secure: true,
+          auth: {
+            user: process.env.SMTP_USER,
+            pass: process.env.SMTP_PASS,
+          },
+        });
+
+        const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 
+                        `${req.headers["x-forwarded-proto"] || "http"}://${req.headers.host}`;
+        const resetLink = `${baseUrl}/admin/reset-password?token=${token}`;
+
+        const mailOptions = {
+          from: process.env.EMAIL_FROM || process.env.SMTP_USER,
+          to: email,
+          subject: "Recuperación de Contraseña - Admin Dashboard",
+          html: generateRecoveryEmail(resetLink, email),
+        };
+
         await transporter.sendMail(mailOptions);
         console.log("✅ Recovery email sent to:", email);
       } catch (emailError) {
-        console.error("⚠️ Email sending failed (non-critical):", emailError);
-        // Continue anyway - token is saved in DB
+        console.error("⚠️ Email sending failed:", emailError);
+        // Continue anyway - token is saved
       }
+    } else {
+      console.log("ℹ️ Email disabled - token generated but not sent:", token);
+      console.log("ℹ️ Reset link:", `${process.env.NEXT_PUBLIC_SITE_URL}/admin/reset-password?token=${token}`);
     }
 
     return res.status(200).json({
@@ -86,7 +132,7 @@ export default async function handler(
     });
 
   } catch (error) {
-    console.error("Recovery error:", error);
+    console.error("❌ Recovery error:", error);
     return res.status(500).json({
       error: "Error al procesar la solicitud"
     });
@@ -139,7 +185,7 @@ function generateRecoveryEmail(resetLink: string, email: string): string {
               <table role="presentation" style="width: 100%; border-collapse: collapse; margin: 0 0 30px 0;">
                 <tr>
                   <td align="center">
-                    <a href="${resetLink}" style="display: inline-block; padding: 16px 40px; background: linear-gradient(135deg, #C6A75E 0%, #b8975a 100%); color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 12px rgba(198, 167, 94, 0.3); transition: all 0.3s ease;">
+                    <a href="${resetLink}" style="display: inline-block; padding: 16px 40px; background: linear-gradient(135deg, #C6A75E 0%, #b8975a 100%); color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 12px rgba(198, 167, 94, 0.3);">
                       Restablecer Contraseña
                     </a>
                   </td>
