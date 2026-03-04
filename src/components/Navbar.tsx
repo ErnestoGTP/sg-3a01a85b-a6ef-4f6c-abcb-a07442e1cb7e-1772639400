@@ -54,31 +54,10 @@ export function Navbar() {
         }`}
       >
         <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-20">
-            {/* Logo and Brand - Mobile */}
-            <Link href="/" className="flex items-center space-x-3 lg:hidden">
-              <Logo className="h-10 w-10" />
-              <div className="flex flex-col">
-                <span className="font-bold text-lg text-white">
-                  Ramitap Training
-                </span>
-                <span className="text-xs text-gold-light">
-                  {workshopConfig.brand.tagline}
-                </span>
-              </div>
-            </Link>
-
-            {/* Logo and Brand - Desktop/Tablet */}
-            <Link href="/" className="hidden lg:flex items-center space-x-3">
-              <Logo className="h-12 w-12" />
-              <div className="flex flex-col">
-                <span className="font-bold text-xl text-white">
-                  Ramitap Training
-                </span>
-                <span className="text-sm text-gold-light">
-                  {workshopConfig.brand.tagline}
-                </span>
-              </div>
+          <div className="flex items-center justify-between w-full h-20">
+            {/* Logo - Visible en todas las resoluciones */}
+            <Link href="/" className="flex items-center">
+              <Logo variant="light" size="md" showIcon={true} />
             </Link>
 
             {/* Desktop Menu */}
@@ -87,14 +66,14 @@ export function Navbar() {
                 <button
                   key={item.id}
                   onClick={() => scrollToSection(item.id)}
-                  className="text-white/80 hover:text-[#C6A75E] transition-colors text-sm font-medium"
+                  className="text-white/80 hover:text-[#C6A75E] transition-colors text-sm font-medium whitespace-nowrap"
                 >
                   {item.label}
                 </button>
               ))}
               <Button
                 onClick={() => scrollToSection("registro")}
-                className="bg-[#C6A75E] hover:bg-[#C6A75E]/90 text-[#0B1C2D] font-semibold"
+                className="bg-[#C6A75E] hover:bg-[#C6A75E]/90 text-[#0B1C2D] font-semibold whitespace-nowrap"
               >
                 Inscríbete
               </Button>
@@ -103,7 +82,7 @@ export function Navbar() {
             {/* Mobile Menu Button */}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="lg:hidden text-white p-2 hover:bg-white/10 rounded-lg transition-colors"
+              className="lg:hidden text-white p-2 hover:bg-white/10 rounded-lg transition-colors flex-shrink-0"
               aria-label="Toggle menu"
             >
               {isMobileMenuOpen ? (
@@ -138,15 +117,10 @@ export function Navbar() {
         >
           {/* Sidebar Header */}
           <div className="flex items-center justify-between p-6 border-b border-white/10">
-            <div className="flex items-center space-x-3">
-              <Logo variant="light" size="sm" />
-              <span className="text-white font-semibold">
-                {workshopConfig.brand.name}
-              </span>
-            </div>
+            <Logo variant="light" size="sm" showIcon={true} />
             <button
               onClick={() => setIsMobileMenuOpen(false)}
-              className="text-white/70 hover:text-white p-2 hover:bg-white/10 rounded-lg transition-colors"
+              className="text-white/70 hover:text-white p-2 hover:bg-white/10 rounded-lg transition-colors flex-shrink-0"
               aria-label="Close menu"
             >
               <X className="w-5 h-5" />

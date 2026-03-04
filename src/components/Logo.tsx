@@ -14,9 +14,15 @@ export function Logo({
   showIcon = true 
 }: LogoProps) {
   const sizeClasses = {
-    sm: "text-lg",
-    md: "text-xl",
-    lg: "text-2xl md:text-3xl"
+    sm: "text-base",
+    md: "text-lg",
+    lg: "text-xl"
+  };
+
+  const iconSizeClasses = {
+    sm: "w-8 h-8 text-sm",
+    md: "w-10 h-10 text-base",
+    lg: "w-12 h-12 text-lg"
   };
 
   const colorClasses = {
@@ -26,21 +32,24 @@ export function Logo({
   };
 
   return (
-    <div className={cn("flex items-center gap-2", className)}>
+    <div className={cn("flex flex-row items-center gap-3", className)}>
       {showIcon && (
-        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#C6A75E] to-[#B8965A] flex items-center justify-center shadow-lg">
-          <span className="text-white font-bold text-lg">RT</span>
+        <div className={cn(
+          "rounded-full bg-gradient-to-br from-[#C6A75E] to-[#B8965A] flex items-center justify-center shadow-lg flex-shrink-0",
+          iconSizeClasses[size]
+        )}>
+          <span className="text-white font-bold">RT</span>
         </div>
       )}
-      <div className="flex flex-col">
+      <div className="flex flex-col leading-tight">
         <span className={cn(
-          "font-bold leading-none tracking-tight",
+          "font-bold tracking-tight whitespace-nowrap",
           sizeClasses[size],
           colorClasses[variant]
         )}>
           Ramitap Training
         </span>
-        <span className="text-xs text-[#C6A75E] font-medium">
+        <span className="text-xs text-[#C6A75E] font-medium whitespace-nowrap">
           Transforma tu Mente
         </span>
       </div>
