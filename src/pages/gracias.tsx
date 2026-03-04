@@ -37,7 +37,7 @@ export default function ThankYouPage() {
   const whatsappMessage = encodeURIComponent(
     `Hola, soy ${name || "un nuevo participante"}, acabo de registrarme al Taller de PNL y aquí está mi comprobante de pago.`
   );
-  const whatsappLink = `https://wa.me/${workshopConfig.contact.whatsappNumber}?text=${whatsappMessage}`;
+  const whatsappLink = `https://wa.me/5216626516705?text=${whatsappMessage}`;
 
   return (
     <>
