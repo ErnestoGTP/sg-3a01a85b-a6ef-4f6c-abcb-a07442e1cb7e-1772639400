@@ -14,7 +14,7 @@ export default async function handler(
   }
 
   try {
-    console.log("🧪 Testing Resend email configuration...");
+    console.log("🧪 Testing email configuration with Nodemailer...");
 
     // Check if email is enabled
     if (process.env.EMAIL_ENABLED !== "true") {
@@ -26,13 +26,13 @@ export default async function handler(
       });
     }
 
-    // Check if Resend API key exists
-    if (!process.env.RESEND_API_KEY) {
-      console.error("❌ RESEND_API_KEY is missing");
+    // Check if SMTP credentials exist
+    if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
+      console.error("❌ SMTP credentials are missing");
       return res.status(500).json({
         success: false,
-        error: "RESEND_API_KEY is not configured",
-        hint: "Add RESEND_API_KEY=re_your_key to your .env.local file"
+        error: "SMTP credentials not configured",
+        hint: "Add SMTP_HOST, SMTP_USER, and SMTP_PASS to your .env.local file"
       });
     }
 
@@ -47,12 +47,19 @@ export default async function handler(
     }
 
     console.log("✅ Environment variables configured correctly");
+    console.log(`📧 SMTP Host: ${process.env.SMTP_HOST}`);
+    console.log(`📧 SMTP Port: ${process.env.SMTP_PORT || 465}`);
+    console.log(`📧 SMTP User: ${process.env.SMTP_USER}`);
     console.log(`📧 Sending test email from: ${process.env.EMAIL_FROM}`);
+
+    // Extract email from EMAIL_FROM
+    const emailMatch = process.env.EMAIL_FROM.match(/<(.+)>/);
+    const testRecipient = emailMatch ? emailMatch[1] : process.env.SMTP_USER;
 
     // Send test email
     const testData = {
       name: "Usuario de Prueba",
-      email: process.env.EMAIL_FROM.match(/<(.+)>/)?.[1] || "test@example.com",
+      email: testRecipient || "test@example.com",
       phone: "1234567890"
     };
 
@@ -61,11 +68,12 @@ export default async function handler(
     const emailSent = await sendConfirmationEmail(testData);
 
     if (emailSent) {
-      console.log("✅ Test email sent successfully!");
+      console.log("✅ Test email sent successfully via Nodemailer!");
       return res.status(200).json({
         success: true,
-        message: "Test email sent successfully! Check your inbox.",
+        message: "Test email sent successfully via Nodemailer! Check your inbox.",
         recipient: testData.email,
+        smtp_host: process.env.SMTP_HOST,
         timestamp: new Date().toISOString()
       });
     } else {
@@ -83,7 +91,7 @@ export default async function handler(
       success: false,
       error: error.message || "Unknown error occurred",
       details: error.toString(),
-      hint: "Check your RESEND_API_KEY and EMAIL_FROM configuration"
+      hint: "Check your SMTP credentials and EMAIL_FROM configuration"
     });
   }
 }
