@@ -1,3 +1,4 @@
+import { SEO } from "@/components/SEO";
 import { Hero } from "@/components/Hero";
 import { ProblemSection } from "@/components/ProblemSection";
 import { WhatIsPNL } from "@/components/WhatIsPNL";
@@ -9,42 +10,33 @@ import { FAQ } from "@/components/FAQ";
 import { Testimonials } from "@/components/Testimonials";
 import { TrainerSection } from "@/components/TrainerSection";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
-import { Navbar } from "@/components/Navbar";
-import { Footer } from "@/components/Footer";
-import { CountdownTimer } from "@/components/CountdownTimer";
-import { SpotsIndicator } from "@/components/SpotsIndicator";
 
 export default function Home() {
-  const scrollToRegistration = () => {
-    const form = document.getElementById("registration-form");
-    if (form) {
-      form.scrollIntoView({ behavior: "smooth" });
+  const scrollToRegister = () => {
+    const element = document.getElementById("registro");
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth" });
     }
   };
 
   return (
     <>
-      <Navbar />
-      <main>
-        <Hero onCTAClick={scrollToRegistration} />
-        
-        <div className="container mx-auto px-4 py-12 space-y-8">
-          <CountdownTimer />
-          <SpotsIndicator />
-        </div>
-
+      <SEO />
+      <div className="min-h-screen bg-gradient-to-b from-[#0B1C2D] via-[#0f2942] to-[#0B1C2D]">
+        {/* Navbar is handled in _app.tsx */}
+        <Hero onCTAClick={scrollToRegister} />
         <ProblemSection />
         <WhatIsPNL />
         <WhatYouWillLearn />
-        <WorkshopDetails onCTAClick={scrollToRegistration} />
-        <TrainerSection />
         <Testimonials />
+        <TrainerSection />
+        <WorkshopDetails onCTAClick={scrollToRegister} />
         <BonusGuarantee />
         <RegistrationForm />
         <FAQ />
-      </main>
-      <Footer />
-      <WhatsAppButton />
+        {/* Footer is handled in _app.tsx */}
+        <WhatsAppButton />
+      </div>
     </>
   );
 }
