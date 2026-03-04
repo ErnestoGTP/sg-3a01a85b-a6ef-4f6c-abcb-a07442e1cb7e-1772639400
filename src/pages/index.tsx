@@ -1,54 +1,50 @@
-import { useRef } from "react";
-import { SEO } from "@/components/SEO";
 import { Hero } from "@/components/Hero";
 import { ProblemSection } from "@/components/ProblemSection";
 import { WhatIsPNL } from "@/components/WhatIsPNL";
 import { WhatYouWillLearn } from "@/components/WhatYouWillLearn";
 import { WorkshopDetails } from "@/components/WorkshopDetails";
 import { BonusGuarantee } from "@/components/BonusGuarantee";
-import { Testimonials } from "@/components/Testimonials";
 import { RegistrationForm } from "@/components/RegistrationForm";
 import { FAQ } from "@/components/FAQ";
-import { WhatsAppButton } from "@/components/WhatsAppButton";
+import { Testimonials } from "@/components/Testimonials";
 import { TrainerSection } from "@/components/TrainerSection";
-import { workshopConfig } from "@/config/workshop";
+import { WhatsAppButton } from "@/components/WhatsAppButton";
+import { Navbar } from "@/components/Navbar";
+import { Footer } from "@/components/Footer";
+import { CountdownTimer } from "@/components/CountdownTimer";
+import { SpotsIndicator } from "@/components/SpotsIndicator";
 
 export default function Home() {
-  const formRef = useRef<HTMLDivElement>(null);
-
-  const scrollToForm = () => {
-    formRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  const scrollToRegistration = () => {
+    const form = document.getElementById("registration-form");
+    if (form) {
+      form.scrollIntoView({ behavior: "smooth" });
+    }
   };
 
   return (
     <>
-      <SEO
-        title={workshopConfig.seo.title}
-        description={workshopConfig.seo.description}
-        image={workshopConfig.seo.ogImage}
-        url="/"
-      />
-      
+      <Navbar />
       <main>
-        <Hero onCTAClick={scrollToForm} />
+        <Hero onCTAClick={scrollToRegistration} />
+        
+        <div className="container mx-auto px-4 py-12 space-y-8">
+          <CountdownTimer />
+          <SpotsIndicator />
+        </div>
+
         <ProblemSection />
         <WhatIsPNL />
         <WhatYouWillLearn />
+        <WorkshopDetails onCTAClick={scrollToRegistration} />
         <TrainerSection />
-        <WorkshopDetails onCTAClick={scrollToForm} />
-        <BonusGuarantee />
         <Testimonials />
-
-        <div ref={formRef} id="registro" className="py-20 bg-gradient-to-b from-gray-50 to-white">
-          <div className="container mx-auto px-4 relative z-10">
-            <RegistrationForm />
-          </div>
-        </div>
-
+        <BonusGuarantee />
+        <RegistrationForm />
         <FAQ />
-        
-        <WhatsAppButton />
       </main>
+      <Footer />
+      <WhatsAppButton />
     </>
   );
 }
