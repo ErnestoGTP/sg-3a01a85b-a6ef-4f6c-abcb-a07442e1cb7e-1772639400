@@ -27,16 +27,22 @@ export default async function handler(
     try {
       const fileContent = await fs.readFile(filePath, "utf-8");
       const registrations: RegistrationData[] = JSON.parse(fileContent);
-      return res.status(200).json(registrations);
+      return res.status(200).json({ registrations });
     } catch (error) {
-      return res.status(200).json([]); // Return empty array if file doesn't exist
+      console.error("Error reading registrations:", error);
+      return res.status(200).json({ registrations: [] });
     }
   }
 
-  // PATCH: Update payment status
-  if (req.method === "PATCH") {
+  // PUT: Update payment status (changed from PATCH to match frontend)
+  if (req.method === "PUT") {
     try {
       const { email, paid } = req.body;
+      
+      if (!email || paid === undefined) {
+        return res.status(400).json({ error: "Missing email or paid status" });
+      }
+
       const fileContent = await fs.readFile(filePath, "utf-8");
       const registrations: RegistrationData[] = JSON.parse(fileContent);
 
@@ -47,6 +53,7 @@ export default async function handler(
       await fs.writeFile(filePath, JSON.stringify(updatedRegistrations, null, 2));
       return res.status(200).json({ success: true });
     } catch (error) {
+      console.error("Error updating registration:", error);
       return res.status(500).json({ error: "Failed to update registration" });
     }
   }
