@@ -24,12 +24,16 @@ export function FAQ() {
       answer: "Solo necesitas traer una libreta y bolígrafo para tomar notas. Nosotros proporcionamos todo el material de trabajo y los ejercicios guiados."
     },
     {
+      question: "¿Cuál es la inversión y qué incluye?",
+      answer: "La inversión es de $800 MXN e incluye: acceso al taller presencial de 2 horas, material didáctico, certificado de participación y bonos digitales para reforzar tu aprendizaje."
+    },
+    {
       question: "¿Puedo cancelar mi registro?",
       answer: "Sí, puedes cancelar hasta 48 horas antes del evento para recibir un reembolso completo. Si surge algo de último momento, también ofrecemos la opción de transferir tu lugar a otra fecha."
     },
     {
       question: "¿Por qué hay cupos limitados?",
-      answer: "Limitamos el número de participantes a 7 personas para garantizar atención personalizada, resolver dudas específicas y asegurar que todos tengan espacio para practicar los ejercicios cómodamente."
+      answer: "Limitamos el número de participantes a 15 personas para garantizar atención personalizada, resolver dudas específicas y asegurar que todos tengan espacio para practicar los ejercicios cómodamente."
     }
   ];
 

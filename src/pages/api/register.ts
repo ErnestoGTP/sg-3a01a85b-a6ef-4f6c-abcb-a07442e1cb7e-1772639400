@@ -148,6 +148,7 @@ export default async function handler(
     return res.status(200).json({
       success: true,
       message: "¡Registro exitoso! Revisa tu email para los siguientes pasos.",
+      redirect: "/gracias" // Added for conversion tracking
     });
 
   } catch (error) {
@@ -158,6 +159,7 @@ export default async function handler(
     return res.status(200).json({
       success: true,
       message: "¡Registro recibido! Te contactaremos pronto con los detalles.",
+      redirect: "/gracias" // Added for conversion tracking
     });
   }
 }

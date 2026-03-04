@@ -42,8 +42,8 @@ export const workshopConfig = {
 
   // Pricing
   pricing: {
-    price: "$750 MXN",
-    amount: 750,
+    price: "$800 MXN",
+    amount: 800,
     currency: "MXN",
     note: "Inversión única que incluye material, certificado y bonos digitales"
   },
