@@ -5,22 +5,20 @@ export const workshopConfig = {
     tagline: "Transforma tu Mente"
   },
 
-  // Event Details
+  // Event Information
   event: {
-    title: "Taller Presencial de PNL Básica",
-    subtitle: "Transforma tu comunicación y seguridad personal en una sola sesión",
-    name: "Taller Presencial de PNL Básica", // Alias para compatibilidad
-    tagline: "2 Horas de Transformación Práctica",
-    date: "Sábado 15 de Marzo, 2025",
-    time: "10:00 AM - 12:00 PM",
+    name: "Taller Presencial de PNL Básica",
+    title: "Descubre el Poder de tu Mente en Solo 2 Horas",
+    subtitle: "Taller presencial práctico de Programación Neurolingüística para transformar tu comunicación, seguridad y resultados personales.",
     duration: "2 horas intensivas",
     modality: "Presencial",
-    maxSeats: 15,
-    maxSpots: 15, // Alias para compatibilidad
-    location: "Centro de Desarrollo Personal - Hermosillo, Sonora",
-    locationDetails: "Dirección exacta se enviará tras confirmar pago",
+    date: "Sábado 21 de Marzo, 2026",
+    time: "10:00 AM - 12:00 PM",
+    location: "Hermosillo, Sonora",
+    locationDetails: "La ubicación exacta se enviará por correo después de confirmar el pago",
     price: "$750 MXN",
-    priceUSD: "$49 USD",
+    maxSeats: 15,
+    registrationDeadline: "2026-03-21T10:00:00-07:00",
   },
 
   // Trainer Information
