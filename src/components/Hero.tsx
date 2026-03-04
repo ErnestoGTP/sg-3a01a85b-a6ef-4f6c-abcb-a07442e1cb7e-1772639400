@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2 } from "lucide-react";
 import { workshopConfig as defaultConfig } from "@/config/workshop";
+import { getFormattedDate } from "@/lib/dateHelpers";
 
 interface HeroProps {
   onCTAClick: () => void;
@@ -11,6 +12,10 @@ interface HeroProps {
 }
 
 export function Hero({ onCTAClick, config = defaultConfig }: HeroProps) {
+  // Safe data extraction with try/catch
+  const safeTrainerName = config.trainer?.name || "Instructor certificado";
+  const safeTrainerTitle = config.trainer?.title || "Especialista en PNL";
+
   const benefits = [
     "No necesitas experiencia previa",
     "100% práctico, cero teoría pesada",

@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Calendar, Clock, MapPin, Users, DollarSign, Award } from "lucide-react";
 import { workshopConfig as defaultConfig } from "@/config/workshop";
 import { AnimatedSection } from "@/components/AnimatedSection";
+import { getFormattedDate, getFormattedTime, getFormattedPrice, getFormattedLocation } from "@/lib/dateHelpers";
 
 interface WorkshopDetailsProps {
   onCTAClick: () => void;
@@ -9,43 +10,55 @@ interface WorkshopDetailsProps {
 }
 
 export function WorkshopDetails({ onCTAClick, config = defaultConfig }: WorkshopDetailsProps) {
+  // Safe data extraction with fallbacks
+  const safeConfig = {
+    date: getFormattedDate(config.event?.date),
+    time: getFormattedTime(config.event?.time),
+    location: getFormattedLocation(config.location?.name),
+    locationNote: config.location?.note || "",
+    price: getFormattedPrice(config.pricing?.price),
+    maxSeats: config.event?.maxSeats || 15,
+    modality: config.event?.modality || "Presencial",
+    duration: config.event?.duration || "2 horas"
+  };
+
   const details = [
     {
       icon: Award,
       label: "Modalidad",
-      value: config.event.modality
+      value: safeConfig.modality
     },
     {
       icon: Clock,
       label: "Duración",
-      value: config.event.duration
+      value: safeConfig.duration
     },
     {
       icon: Calendar,
       label: "Fecha",
-      value: config.event.date
+      value: safeConfig.date
     },
     {
       icon: Clock,
       label: "Hora",
-      value: config.event.time
+      value: safeConfig.time
     },
     {
       icon: MapPin,
       label: "Ubicación",
-      value: `${config.location.name}`,
-      note: config.location.note
+      value: safeConfig.location,
+      note: safeConfig.locationNote
     },
     {
       icon: DollarSign,
       label: "Inversión",
-      value: config.pricing.price,
+      value: safeConfig.price,
       highlight: true
     },
     {
       icon: Users,
       label: "Cupos",
-      value: `Máximo ${config.event.maxSeats} personas`,
+      value: `Máximo ${safeConfig.maxSeats} personas`,
       highlight: true
     }
   ];
@@ -106,7 +119,7 @@ export function WorkshopDetails({ onCTAClick, config = defaultConfig }: Workshop
             <AnimatedSection delay={0.8}>
               <div className="text-center bg-gradient-to-r from-[#0B1C2D] to-[#1a2f45] rounded-2xl p-8 shadow-xl">
                 <p className="text-white text-lg mb-6">
-                  <span className="font-bold text-[#C6A75E]">Inversión única:</span> {config.pricing.price} — Pago completo
+                  <span className="font-bold text-[#C6A75E]">Inversión única:</span> {safeConfig.price} — Pago completo
                 </p>
                 <Button
                   onClick={onCTAClick}
