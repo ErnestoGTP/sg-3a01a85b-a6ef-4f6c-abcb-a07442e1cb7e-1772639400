@@ -4,6 +4,9 @@ import { useState } from "react";
 import { Logo } from "@/components/Logo";
 import { LegalModal } from "@/components/LegalModal";
 import { privacyPolicyContent, termsConditionsContent, refundPolicyContent } from "@/lib/legalContent";
+import Link from "next/link";
+import { workshopConfig } from "@/config/workshop";
+import { Shield } from "lucide-react";
 
 type LegalSection = "privacy" | "terms" | "refund" | null;
 
