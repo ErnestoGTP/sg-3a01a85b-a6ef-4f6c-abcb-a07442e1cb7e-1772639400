@@ -1,6 +1,5 @@
 import { Award, Target, Heart } from "lucide-react";
 import { AnimatedSection } from "@/components/AnimatedSection";
-import { workshopConfig } from "@/config/workshop";
 
 export function TrainerSection() {
   const highlights = [
@@ -42,8 +41,8 @@ export function TrainerSection() {
                 <div className="relative">
                   <div className="aspect-square rounded-2xl overflow-hidden border-4 border-[#C6A75E]/30 shadow-2xl">
                     <img
-                      src={workshopConfig.trainer.image}
-                      alt={workshopConfig.trainer.name}
+                      src="/presenter.jpg"
+                      alt="Ernesto Ramírez - Instructor Certificado en PNL"
                       className="w-full h-full object-cover"
                     />
                   </div>
@@ -58,10 +57,10 @@ export function TrainerSection() {
                   {/* Name & Title */}
                   <div>
                     <h3 className="text-3xl md:text-4xl font-bold text-[#0B1C2D] mb-2">
-                      {workshopConfig.trainer.name}
+                      Ernesto Ramírez
                     </h3>
                     <p className="text-xl text-[#C6A75E] font-semibold">
-                      {workshopConfig.trainer.title}
+                      Programador Neuro Lingüístico y Semántico
                     </p>
                   </div>
 
@@ -72,9 +71,6 @@ export function TrainerSection() {
                         Conoce a tu facilitador
                       </h2>
                       <p className="text-lg text-gray-700 leading-relaxed mb-4">
-                        {workshopConfig.trainer.bio}
-                      </p>
-                      <p className="text-lg text-gray-700 leading-relaxed">
                         Ernesto Ramírez es Programador Neuro Lingüístico y Semántico, instructor certificado en el Estándar de Competencia <span className="font-semibold text-[#0B1C2D]">EC0217.01 "Impartición de cursos de formación del capital humano de manera presencial grupal"</span>, avalado por SEP–CONOCER, lo que respalda la calidad y estructura de cada uno de sus talleres.
                       </p>
                     </div>
@@ -100,9 +96,9 @@ export function TrainerSection() {
 
                     {/* Approach & Style */}
                     <div className="space-y-4 text-gray-700 leading-relaxed">
-                      <p className="font-medium text-[#0B1C2D]">{workshopConfig.trainer.approach}</p>
+                      <p className="font-medium text-[#0B1C2D]">Enfoque práctico y cercano</p>
                       <p className="italic text-gray-600 border-l-4 border-[#C6A75E] pl-4 py-2 bg-[#C6A75E]/5">
-                        "{workshopConfig.trainer.style}"
+                        "Entendiendo y aplicando la Semántica y el PNL en la vida cotidiana"
                       </p>
                     </div>
 
