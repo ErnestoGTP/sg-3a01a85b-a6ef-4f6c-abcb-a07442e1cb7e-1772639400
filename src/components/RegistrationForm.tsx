@@ -66,6 +66,8 @@ export function RegistrationForm() {
     setError(null);
 
     try {
+      console.log("📤 Sending registration:", data);
+      
       const response = await fetch("/api/register", {
         method: "POST",
         headers: {
@@ -74,23 +76,30 @@ export function RegistrationForm() {
         body: JSON.stringify(data)
       });
 
+      console.log("📥 Response status:", response.status);
       const result = await response.json();
+      console.log("📥 Response data:", result);
 
-      if (!response.ok) {
+      // CRITICAL: Always transition to payment screen on 200 status
+      if (response.status === 200) {
+        console.log("✅ Registration successful, showing payment screen");
+        setRegisteredName(data.name);
+        setIsSuccess(true);
+        reset();
+
+        // Scroll to payment instructions
+        setTimeout(() => {
+          const paymentInstructions = document.getElementById("payment-instructions");
+          if (paymentInstructions) {
+            paymentInstructions.scrollIntoView({ behavior: "smooth", block: "center" });
+          }
+        }, 100);
+      } else {
+        // Only show error for non-200 responses (validation errors)
         throw new Error(result.error || "Error al procesar el registro");
       }
-
-      setRegisteredName(data.name);
-      setIsSuccess(true);
-      reset();
-
-      setTimeout(() => {
-        const paymentInstructions = document.getElementById("payment-instructions");
-        if (paymentInstructions) {
-          paymentInstructions.scrollIntoView({ behavior: "smooth", block: "center" });
-        }
-      }, 100);
     } catch (err) {
+      console.error("❌ Registration error:", err);
       setError(err instanceof Error ? err.message : "Error al enviar el formulario");
     } finally {
       setIsSubmitting(false);
