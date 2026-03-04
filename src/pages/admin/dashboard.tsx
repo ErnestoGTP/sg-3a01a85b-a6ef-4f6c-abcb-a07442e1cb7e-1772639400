@@ -52,13 +52,40 @@ export default function AdminDashboard() {
   const checkAuthAndLoadData = async () => {
     try {
       setLoading(true);
-      const response = await fetch("/api/admin/registrations");
       
-      if (response.status === 401) {
-        // Not authenticated - show unauthorized screen instead of immediate redirect
+      const authResponse = await fetch("/api/admin/auth", {
+        method: "GET",
+        credentials: "include"
+      });
+
+      if (authResponse.status === 401 || !authResponse.ok) {
         setShowUnauthorized(true);
         setLoading(false);
-        // Redirect after 2 seconds to give user time to see message
+        setTimeout(() => {
+          router.push("/admin/login");
+        }, 2000);
+        return;
+      }
+
+      const authData = await authResponse.json();
+      if (!authData.authenticated) {
+        setShowUnauthorized(true);
+        setLoading(false);
+        setTimeout(() => {
+          router.push("/admin/login");
+        }, 2000);
+        return;
+      }
+
+      setIsAuthenticated(true);
+
+      const response = await fetch("/api/admin/registrations", {
+        credentials: "include"
+      });
+      
+      if (response.status === 401) {
+        setShowUnauthorized(true);
+        setLoading(false);
         setTimeout(() => {
           router.push("/admin/login");
         }, 2000);
@@ -71,9 +98,8 @@ export default function AdminDashboard() {
 
       const data = await response.json();
       setRegistrations(data.registrations || []);
-      setIsAuthenticated(true);
     } catch (error) {
-      console.error("Error loading registrations:", error);
+      console.error("Error loading data:", error);
       setShowUnauthorized(true);
       setLoading(false);
       setTimeout(() => {
@@ -86,7 +112,10 @@ export default function AdminDashboard() {
 
   const handleLogout = async () => {
     try {
-      await fetch("/api/admin/auth", { method: "DELETE" });
+      await fetch("/api/admin/auth", { 
+        method: "DELETE",
+        credentials: "include"
+      });
       router.push("/admin/login");
     } catch (error) {
       console.error("Error logging out:", error);
@@ -102,6 +131,7 @@ export default function AdminDashboard() {
       const response = await fetch("/api/admin/registrations", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({
           email,
           paid: !registration.paid
@@ -181,7 +211,6 @@ export default function AdminDashboard() {
 
   const filteredRegistrations = getFilteredRegistrations();
 
-  // Show unauthorized screen if not authenticated
   if (showUnauthorized) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#0B1C2D] via-[#1a2332] to-[#0B1C2D] flex items-center justify-center p-4">
@@ -234,7 +263,6 @@ export default function AdminDashboard() {
     );
   }
 
-  // Show loading state while checking auth
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#0B1C2D] via-[#1a2332] to-[#0B1C2D] flex items-center justify-center">
@@ -251,44 +279,36 @@ export default function AdminDashboard() {
     );
   }
 
-  // Only render dashboard if authenticated
   if (!isAuthenticated) {
     return null;
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0B1C2D] via-[#1a2332] to-[#0B1C2D] py-8 px-4">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
-        >
-          <Card className="bg-white/5 backdrop-blur-sm border-[#C6A75E]/20 p-6">
-            <div className="flex items-center justify-between flex-wrap gap-4">
-              <div className="flex items-center gap-4">
-                <Logo className="w-12 h-12" />
-                <div>
-                  <h1 className="text-2xl font-bold text-white mb-1">
-                    Dashboard de Administración
-                  </h1>
-                  <p className="text-[#C6A75E]">{workshopConfig.event.title}</p>
-                </div>
-              </div>
-              <Button
-                onClick={handleLogout}
-                variant="outline"
-                className="border-[#C6A75E] text-[#C6A75E] hover:bg-[#C6A75E] hover:text-[#0B1C2D]"
-              >
-                <LogOut className="w-4 h-4 mr-2" />
-                Cerrar Sesión
-              </Button>
+    <div className="min-h-screen bg-gradient-to-br from-[#0B1C2D] via-[#0f2438] to-[#0B1C2D]">
+      {/* Header */}
+      <header className="border-b border-[#C6A75E]/20 bg-[#0B1C2D]/50 backdrop-blur-sm sticky top-0 z-50">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#C6A75E] to-[#a88942] flex items-center justify-center">
+              <Shield className="w-5 h-5 text-[#0B1C2D]" />
             </div>
-          </Card>
-        </motion.div>
+            <div>
+              <h1 className="text-xl font-bold text-white">Admin Dashboard</h1>
+              <p className="text-sm text-gray-400">Taller Presencial de PNL Básica</p>
+            </div>
+          </div>
+          <Button
+            onClick={handleLogout}
+            variant="outline"
+            className="border-[#C6A75E] text-[#C6A75E] hover:bg-[#C6A75E] hover:text-[#0B1C2D]"
+          >
+            <LogOut className="w-4 h-4 mr-2" />
+            Cerrar Sesión
+          </Button>
+        </div>
+      </header>
 
-        {/* Stats Cards */}
+      <div className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -355,7 +375,6 @@ export default function AdminDashboard() {
           </motion.div>
         </div>
 
-        {/* Filters and Search */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -424,7 +443,6 @@ export default function AdminDashboard() {
           </Card>
         </motion.div>
 
-        {/* Registrations Table */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

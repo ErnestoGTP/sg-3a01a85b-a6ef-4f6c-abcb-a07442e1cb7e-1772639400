@@ -7,7 +7,7 @@ import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, CheckCircle2 } from "lucide-react";
+import { Loader2, CheckCircle2, CreditCard, Copy, Check } from "lucide-react";
 import { AnimatedSection } from "@/components/AnimatedSection";
 import { workshopConfig } from "@/config/workshop";
 import { LegalModal } from "@/components/LegalModal";
@@ -25,8 +25,10 @@ type LegalSection = "privacy" | "terms" | "refund" | null;
 export function RegistrationForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [registeredName, setRegisteredName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [openModal, setOpenModal] = useState<LegalSection>(null);
+  const [copiedField, setCopiedField] = useState<string | null>(null);
 
   const {
     register,
@@ -53,6 +55,12 @@ export function RegistrationForm() {
 
   const currentModal = legalLinks.find(link => link.id === openModal);
 
+  const copyToClipboard = (text: string, field: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedField(field);
+    setTimeout(() => setCopiedField(null), 2000);
+  };
+
   const onSubmit = async (data: FormData) => {
     setIsSubmitting(true);
     setError(null);
@@ -72,13 +80,14 @@ export function RegistrationForm() {
         throw new Error(result.error || "Error al procesar el registro");
       }
 
+      setRegisteredName(data.name);
       setIsSuccess(true);
       reset();
 
       setTimeout(() => {
-        const successElement = document.getElementById("success-message");
-        if (successElement) {
-          successElement.scrollIntoView({ behavior: "smooth", block: "center" });
+        const paymentInstructions = document.getElementById("payment-instructions");
+        if (paymentInstructions) {
+          paymentInstructions.scrollIntoView({ behavior: "smooth", block: "center" });
         }
       }, 100);
     } catch (err) {
@@ -87,6 +96,11 @@ export function RegistrationForm() {
       setIsSubmitting(false);
     }
   };
+
+  const whatsappMessage = encodeURIComponent(
+    `Hola, soy ${registeredName}, acabo de registrarme al Taller de PNL y aquí está mi comprobante de pago.`
+  );
+  const whatsappLink = `https://wa.me/${workshopConfig.contact.whatsappNumber}?text=${whatsappMessage}`;
 
   return (
     <>
@@ -230,42 +244,151 @@ export function RegistrationForm() {
                   </div>
                 </>
               ) : (
-                <div id="success-message" className="bg-white rounded-2xl border-2 border-green-500/30 shadow-xl p-8 md:p-10 text-center">
-                  <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <CheckCircle2 className="w-10 h-10 text-green-600" />
+                <div id="payment-instructions" className="bg-white rounded-2xl border-2 border-[#C6A75E]/30 shadow-xl p-8 md:p-10">
+                  {/* Success Header */}
+                  <div className="text-center mb-8">
+                    <div className="w-20 h-20 bg-[#C6A75E]/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                      <CheckCircle2 className="w-10 h-10 text-[#C6A75E]" />
+                    </div>
+                    <h3 className="text-2xl md:text-3xl font-bold text-[#0B1C2D] mb-3">
+                      ¡Excelente decisión, {registeredName}!
+                    </h3>
+                    <p className="text-lg text-gray-700 leading-relaxed">
+                      Tu registro está pre-aprobado. Para asegurar definitivamente tu lugar y recibir la ubicación exacta, realiza tu inversión de <span className="font-bold text-[#C6A75E]">{workshopConfig.pricing.price}</span>.
+                    </p>
                   </div>
-                  <h3 className="text-2xl md:text-3xl font-bold text-[#0B1C2D] mb-4">
-                    ¡Registro exitoso!
-                  </h3>
-                  <p className="text-lg text-gray-700 mb-6 leading-relaxed">
-                    Hemos enviado un correo de confirmación a tu email con todos los detalles del taller, incluyendo:
-                  </p>
-                  <ul className="text-left max-w-md mx-auto space-y-2 mb-8">
-                    <li className="flex items-start gap-2 text-gray-700">
-                      <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-                      <span>Fecha y horario exactos</span>
-                    </li>
-                    <li className="flex items-start gap-2 text-gray-700">
-                      <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-                      <span>Ubicación en Hermosillo</span>
-                    </li>
-                    <li className="flex items-start gap-2 text-gray-700">
-                      <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-                      <span>Instrucciones de pago</span>
-                    </li>
-                    <li className="flex items-start gap-2 text-gray-700">
-                      <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-                      <span>Política de cancelación</span>
-                    </li>
-                  </ul>
-                  <p className="text-sm text-gray-600 mb-6">
-                    Si no ves el correo en tu bandeja de entrada, revisa tu carpeta de spam o correo no deseado.
-                  </p>
-                  <div className="bg-[#C6A75E]/10 p-4 rounded-lg border-l-4 border-[#C6A75E]">
+
+                  {/* Payment Instructions Card */}
+                  <div className="bg-gradient-to-br from-[#0B1C2D] to-[#1a2f45] rounded-xl p-6 mb-6 text-white">
+                    <div className="flex items-center gap-3 mb-4">
+                      <CreditCard className="w-6 h-6 text-[#C6A75E]" />
+                      <h4 className="text-xl font-bold">Datos Bancarios</h4>
+                    </div>
+                    
+                    <div className="space-y-4">
+                      {/* Bank */}
+                      <div className="bg-white/10 rounded-lg p-4 backdrop-blur">
+                        <p className="text-sm text-gray-300 mb-1">Banco</p>
+                        <div className="flex items-center justify-between">
+                          <p className="text-lg font-semibold">{workshopConfig.payment.bank}</p>
+                          <button
+                            onClick={() => copyToClipboard(workshopConfig.payment.bank, "bank")}
+                            className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                            title="Copiar banco"
+                          >
+                            {copiedField === "bank" ? (
+                              <Check className="w-4 h-4 text-green-400" />
+                            ) : (
+                              <Copy className="w-4 h-4 text-gray-300" />
+                            )}
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Account Number */}
+                      <div className="bg-white/10 rounded-lg p-4 backdrop-blur">
+                        <p className="text-sm text-gray-300 mb-1">Cuenta/Tarjeta</p>
+                        <div className="flex items-center justify-between">
+                          <p className="text-lg font-semibold font-mono">{workshopConfig.payment.account}</p>
+                          <button
+                            onClick={() => copyToClipboard(workshopConfig.payment.account, "account")}
+                            className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                            title="Copiar número de cuenta"
+                          >
+                            {copiedField === "account" ? (
+                              <Check className="w-4 h-4 text-green-400" />
+                            ) : (
+                              <Copy className="w-4 h-4 text-gray-300" />
+                            )}
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Account Holder */}
+                      <div className="bg-white/10 rounded-lg p-4 backdrop-blur">
+                        <p className="text-sm text-gray-300 mb-1">Titular</p>
+                        <div className="flex items-center justify-between">
+                          <p className="text-lg font-semibold">{workshopConfig.payment.accountHolder}</p>
+                          <button
+                            onClick={() => copyToClipboard(workshopConfig.payment.accountHolder, "holder")}
+                            className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                            title="Copiar nombre del titular"
+                          >
+                            {copiedField === "holder" ? (
+                              <Check className="w-4 h-4 text-green-400" />
+                            ) : (
+                              <Copy className="w-4 h-4 text-gray-300" />
+                            )}
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Concept */}
+                      <div className="bg-white/10 rounded-lg p-4 backdrop-blur">
+                        <p className="text-sm text-gray-300 mb-1">Concepto</p>
+                        <div className="flex items-center justify-between">
+                          <p className="text-lg font-semibold">{workshopConfig.payment.concept}</p>
+                          <button
+                            onClick={() => copyToClipboard(workshopConfig.payment.concept, "concept")}
+                            className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                            title="Copiar concepto"
+                          >
+                            {copiedField === "concept" ? (
+                              <Check className="w-4 h-4 text-green-400" />
+                            ) : (
+                              <Copy className="w-4 h-4 text-gray-300" />
+                            )}
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Amount */}
+                      <div className="bg-[#C6A75E]/20 rounded-lg p-4 backdrop-blur border-2 border-[#C6A75E]/50">
+                        <p className="text-sm text-[#C6A75E] mb-1">Monto a Transferir</p>
+                        <div className="flex items-center justify-between">
+                          <p className="text-2xl font-bold text-[#C6A75E]">{workshopConfig.payment.amount}</p>
+                          <button
+                            onClick={() => copyToClipboard(workshopConfig.payment.amount, "amount")}
+                            className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                            title="Copiar monto"
+                          >
+                            {copiedField === "amount" ? (
+                              <Check className="w-4 h-4 text-green-400" />
+                            ) : (
+                              <Copy className="w-4 h-4 text-[#C6A75E]" />
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* WhatsApp Button */}
+                  <a
+                    href={whatsappLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block w-full"
+                  >
+                    <Button className="w-full h-14 bg-[#25D366] hover:bg-[#20ba5a] text-white font-bold text-lg rounded-full shadow-lg shadow-[#25D366]/30 hover:shadow-xl hover:shadow-[#25D366]/40 transition-all duration-300 hover:scale-105">
+                      <svg className="w-6 h-6 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+                      </svg>
+                      Ya pagué, enviar comprobante
+                    </Button>
+                  </a>
+
+                  {/* Email Confirmation Notice */}
+                  <div className="mt-6 p-4 bg-blue-50 border-l-4 border-blue-500 rounded-lg">
+                    <p className="text-sm text-blue-900">
+                      <span className="font-semibold">📧 Revisa tu correo:</span> Te hemos enviado un email con tu boleto QR y estas mismas instrucciones por si deseas pagar más tarde.
+                    </p>
+                  </div>
+
+                  {/* Additional Info */}
+                  <div className="mt-6 p-4 bg-[#C6A75E]/10 rounded-lg border-l-4 border-[#C6A75E]">
                     <p className="text-sm text-gray-700">
-                      <span className="font-semibold text-[#0B1C2D]">¿Tienes dudas?</span>
-                      <br />
-                      Contáctanos por WhatsApp: {workshopConfig.contact.whatsappNumber}
+                      Una vez que envíes tu comprobante por WhatsApp, confirmaremos tu pago y te enviaremos la ubicación exacta del taller en Hermosillo, Sonora.
                     </p>
                   </div>
                 </div>

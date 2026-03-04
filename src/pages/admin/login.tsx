@@ -196,92 +196,161 @@ export default function AdminLogin() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0B1C2D] via-[#1a2332] to-[#0B1C2D] flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-[#0B1C2D] via-[#0f2438] to-[#0B1C2D] flex items-center justify-center p-4">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-md"
       >
-        <Card className="p-8 bg-white/5 backdrop-blur-sm border-[#C6A75E]/30">
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2 text-gray-400 hover:text-white mb-6 transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span>Volver a la landing</span>
-          </Link>
-
-          <div className="text-center mb-8">
-            <Shield className="w-12 h-12 text-[#C6A75E] mx-auto mb-4" />
-            <h1 className="text-2xl font-bold text-white mb-2">
-              Admin Dashboard
-            </h1>
-            <p className="text-gray-300 text-sm">
-              Ingresa tu contraseña para acceder
-            </p>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Contraseña de Administrador
-              </label>
-              <div className="relative">
-                <Input
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Ingresa tu contraseña"
-                  required
-                  className="bg-white/10 border-gray-600 text-white placeholder:text-gray-500 pr-12"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
-                  aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
-                >
-                  {showPassword ? (
-                    <EyeOff className="w-5 h-5" />
-                  ) : (
-                    <Eye className="w-5 h-5" />
-                  )}
-                </button>
-              </div>
-            </div>
-
-            {error && (
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="text-red-400 text-sm text-center"
+        <Card className="bg-[#0B1C2D]/50 backdrop-blur-sm border-[#C6A75E]/20 p-8">
+          {!showRecovery ? (
+            <>
+              {/* Volver a la landing */}
+              <button
+                onClick={() => router.push("/")}
+                className="flex items-center gap-2 text-gray-400 hover:text-[#C6A75E] transition-colors mb-6"
               >
-                {error}
-              </motion.p>
-            )}
+                <ArrowLeft className="w-4 h-4" />
+                Volver a la landing
+              </button>
 
-            <Button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-[#C6A75E] hover:bg-[#b89955] text-white font-semibold py-3"
-            >
-              {loading ? "Verificando..." : "Iniciar Sesión"}
-            </Button>
+              {/* Logo y título */}
+              <div className="text-center mb-8">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-[#C6A75E] to-[#a88942] mb-4">
+                  <Shield className="w-8 h-8 text-[#0B1C2D]" />
+                </div>
+                <h1 className="text-2xl font-bold text-white mb-2">
+                  Admin Dashboard
+                </h1>
+                <p className="text-gray-400">
+                  Ingresa tu contraseña para acceder
+                </p>
+              </div>
 
-            <button
-              type="button"
-              onClick={() => setShowRecovery(true)}
-              className="w-full text-sm text-gray-400 hover:text-[#C6A75E] transition-colors text-center"
-            >
-              ¿Olvidaste tu contraseña?
-            </button>
-          </form>
+              {/* Formulario */}
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div>
+                  <label
+                    htmlFor="password"
+                    className="block text-sm font-medium text-gray-300 mb-2"
+                  >
+                    Contraseña de Administrador
+                  </label>
+                  <div className="relative">
+                    <Input
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Ingresa tu contraseña"
+                      className="bg-[#0f2438] border-[#C6A75E]/30 text-white placeholder:text-gray-500 pr-10"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#C6A75E] transition-colors"
+                    >
+                      {showPassword ? (
+                        <EyeOff className="w-5 h-5" />
+                      ) : (
+                        <Eye className="w-5 h-5" />
+                      )}
+                    </button>
+                  </div>
+                </div>
 
-          <div className="mt-6 p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
-            <p className="text-xs text-blue-300 text-center">
-              💡 Contraseña por defecto: <span className="font-mono font-semibold">RamitapAdmin2026!</span>
-            </p>
-          </div>
+                {error && (
+                  <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3 text-sm text-red-400">
+                    {error}
+                  </div>
+                )}
+
+                <Button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full bg-gradient-to-r from-[#C6A75E] to-[#a88942] hover:from-[#a88942] hover:to-[#C6A75E] text-[#0B1C2D] font-semibold"
+                >
+                  {loading ? "Verificando..." : "Iniciar Sesión"}
+                </Button>
+
+                <div className="text-center">
+                  <button
+                    type="button"
+                    onClick={() => setShowRecovery(true)}
+                    className="text-sm text-gray-400 hover:text-[#C6A75E] transition-colors"
+                  >
+                    ¿Olvidaste tu contraseña?
+                  </button>
+                </div>
+              </form>
+            </>
+          ) : (
+            <>
+              {/* Volver al login */}
+              <button
+                onClick={() => setShowRecovery(false)}
+                className="flex items-center gap-2 text-gray-400 hover:text-white mb-6 transition-colors"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Volver al login
+              </button>
+
+              {/* Logo y título */}
+              <div className="text-center mb-8">
+                <Mail className="w-12 h-12 text-[#C6A75E] mx-auto mb-4" />
+                <h2 className="text-2xl font-bold text-white mb-2">
+                  Recuperar Contraseña
+                </h2>
+                <p className="text-gray-300 text-sm">
+                  Ingresa tu email de administrador y te enviaremos instrucciones
+                </p>
+              </div>
+
+              {/* Formulario */}
+              <form onSubmit={handleRecovery} className="space-y-6">
+                <div>
+                  <label
+                    htmlFor="recoveryEmail"
+                    className="block text-sm font-medium text-gray-300 mb-2"
+                  >
+                    Email de Administrador
+                  </label>
+                  <Input
+                    id="recoveryEmail"
+                    type="email"
+                    value={recoveryEmail}
+                    onChange={(e) => setRecoveryEmail(e.target.value)}
+                    placeholder="admin@ramitaptraining.com"
+                    required
+                    className="bg-white/10 border-gray-600 text-white placeholder:text-gray-500"
+                  />
+                </div>
+
+                {error && (
+                  <motion.p
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="text-red-400 text-sm text-center"
+                  >
+                    {error}
+                  </motion.p>
+                )}
+
+                <Button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full bg-[#C6A75E] hover:bg-[#b89955] text-white font-semibold py-3"
+                >
+                  {loading ? "Enviando..." : "Enviar Instrucciones"}
+                </Button>
+              </form>
+
+              <p className="text-xs text-gray-400 text-center mt-6">
+                El email será enviado a {recoveryEmail || "tu dirección registrada"}
+              </p>
+            </>
+          )}
         </Card>
       </motion.div>
     </div>

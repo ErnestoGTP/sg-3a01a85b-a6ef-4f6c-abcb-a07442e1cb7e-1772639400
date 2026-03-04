@@ -74,5 +74,29 @@ export const workshopConfig = {
     description: "Aprende a hablar con seguridad y sin autosabotaje en 2 horas. Taller práctico de PNL facilitado por Ernesto Ramírez, Programador Neuro Lingüístico y Semántico. Solo 750 pesos en Hermosillo, Sonora.",
     keywords: "PNL, Programación Neurolingüística, Ernesto Ramírez, Ramitap Training, taller Hermosillo, comunicación efectiva, hablar con seguridad, autosabotaje, desarrollo personal",
     ogImage: "/og-image.png"
+  },
+  event: {
+    name: "Taller Presencial de PNL Básica",
+    tagline: "2 Horas de Transformación Práctica",
+    date: "Sábado 15 de Marzo, 2025",
+    time: "10:00 AM - 12:00 PM",
+    duration: "2 horas intensivas",
+    location: "Centro de Desarrollo Personal - Hermosillo, Sonora",
+    locationDetails: "Dirección exacta se enviará tras confirmar pago",
+    price: "$750 MXN",
+    priceUSD: "$49 USD",
+    maxSpots: 15,
+  },
+  payment: {
+    bank: "BanCoppel",
+    account: "4169161488520916",
+    accountHolder: "Edgardo Ernesto Ramirez",
+    concept: "Taller PNL",
+    amount: "$750 MXN",
+  },
+  contact: {
+    whatsappNumber: "5216626516705",
+    whatsappLink: "https://wa.me/5216626516705",
+    organizerEmail: "ramitaptraining@gmail.com",
   }
 };
