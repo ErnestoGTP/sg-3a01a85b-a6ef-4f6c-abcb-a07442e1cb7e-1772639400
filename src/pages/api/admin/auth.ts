@@ -26,7 +26,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         configuredEmail: adminEmail,
         emailMatch: email?.toLowerCase() === adminEmail?.toLowerCase(),
         passwordProvided: !!password,
-        passwordConfigured: !!adminPassword
+        passwordConfigured: !!adminPassword,
+        // CRITICAL DEBUG - Compare actual values
+        providedPasswordLength: password?.length,
+        configuredPasswordLength: adminPassword?.length,
+        passwordsMatch: password === adminPassword,
+        // Show first/last chars to verify (not full password for security)
+        providedPasswordStart: password?.substring(0, 3),
+        configuredPasswordStart: adminPassword?.substring(0, 3),
+        providedPasswordEnd: password?.substring(password.length - 3),
+        configuredPasswordEnd: adminPassword?.substring(adminPassword.length - 3)
       });
 
       // Validate credentials (case-insensitive email)
