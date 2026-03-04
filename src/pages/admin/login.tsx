@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 
 export default function AdminLogin() {
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
@@ -28,7 +29,7 @@ export default function AdminLogin() {
       const response = await fetch("/api/admin/auth", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password }),
+        body: JSON.stringify({ email, password }),
       });
 
       const data = await response.json();
@@ -36,7 +37,7 @@ export default function AdminLogin() {
       if (data.success) {
         router.push("/admin/dashboard");
       } else {
-        setError("Contraseña incorrecta");
+        setError(data.error || "Credenciales incorrectas");
       }
     } catch (err) {
       setError("Error al iniciar sesión");
@@ -229,6 +230,24 @@ export default function AdminLogin() {
 
               {/* Formulario */}
               <form onSubmit={handleSubmit} className="space-y-6">
+                <div>
+                  <label
+                    htmlFor="email"
+                    className="block text-sm font-medium text-gray-300 mb-2"
+                  >
+                    Email de Administrador
+                  </label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="admin@ramitaptraining.com"
+                    className="bg-[#0f2438] border-[#C6A75E]/30 text-white placeholder:text-gray-500"
+                    required
+                  />
+                </div>
+
                 <div>
                   <label
                     htmlFor="password"

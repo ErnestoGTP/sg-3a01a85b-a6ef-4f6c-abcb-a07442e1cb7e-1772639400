@@ -4,6 +4,10 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import { motion } from "framer-motion";
 import {
+  PieChart, Pie, Cell,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer
+} from "recharts";
+import {
   Users,
   DollarSign,
   Clock,
@@ -22,7 +26,8 @@ import {
   Trash2,
   Settings,
   QrCode,
-  UserPlus
+  UserPlus,
+  BarChart as BarChartIcon
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -395,6 +400,33 @@ export default function AdminDashboard() {
 
   const filteredParticipants = getFilteredParticipants();
 
+  // Data for Charts
+  const paymentData = [
+    { name: "Pagado", value: paidCount, color: "#4ade80" }, // Green-400
+    { name: "Pendiente", value: pendingCount, color: "#fb923c" }, // Orange-400
+  ];
+
+  // Helper to get last 7 days
+  const getLast7Days = () => {
+    const days = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      days.push(d.toISOString().split("T")[0]);
+    }
+    return days;
+  };
+
+  const registrationData = getLast7Days().map(date => {
+    // Count participants created on this date (simple string match)
+    const count = participants.filter(p => p.created_at.startsWith(date)).length;
+    const [year, month, day] = date.split("-");
+    return {
+      name: `${day}/${month}`,
+      registros: count
+    };
+  });
+
   if (showUnauthorized) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#0B1C2D] via-[#1a2332] to-[#0B1C2D] flex items-center justify-center p-4">
@@ -509,6 +541,10 @@ export default function AdminDashboard() {
             <TabsTrigger value="participants" className="data-[state=active]:bg-[#C6A75E] data-[state=active]:text-[#0B1C2D]">
               <Users className="w-4 h-4 mr-2" />
               Participantes
+            </TabsTrigger>
+            <TabsTrigger value="analytics" className="data-[state=active]:bg-[#C6A75E] data-[state=active]:text-[#0B1C2D]">
+              <BarChartIcon className="w-4 h-4 mr-2" />
+              Analíticas
             </TabsTrigger>
             <TabsTrigger value="settings" className="data-[state=active]:bg-[#C6A75E] data-[state=active]:text-[#0B1C2D]">
               <Settings className="w-4 h-4 mr-2" />
@@ -798,6 +834,76 @@ export default function AdminDashboard() {
                   </div>
                 )}
               </Card>
+            </motion.div>
+          </TabsContent>
+
+          {/* Analytics Tab */}
+          <TabsContent value="analytics" className="space-y-6">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Donut Chart - Payment Status */}
+                <Card className="bg-white/5 backdrop-blur-sm border-[#C6A75E]/20 p-6">
+                  <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
+                    <DollarSign className="w-5 h-5 text-[#C6A75E]" />
+                    Estado de Pagos
+                  </h3>
+                  <div className="h-[300px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={paymentData}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={60}
+                          outerRadius={80}
+                          paddingAngle={5}
+                          dataKey="value"
+                        >
+                          {paymentData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} stroke="rgba(0,0,0,0.1)" />
+                          ))}
+                        </Pie>
+                        <RechartsTooltip 
+                          contentStyle={{ backgroundColor: "#0B1C2D", borderColor: "#C6A75E", color: "#fff" }}
+                          itemStyle={{ color: "#fff" }}
+                        />
+                        <Legend verticalAlign="bottom" height={36} wrapperStyle={{ color: "#fff" }} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                </Card>
+
+                {/* Bar Chart - Registrations Trend */}
+                <Card className="bg-white/5 backdrop-blur-sm border-[#C6A75E]/20 p-6">
+                  <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
+                    <Users className="w-5 h-5 text-[#C6A75E]" />
+                    Registros (Últimos 7 días)
+                  </h3>
+                  <div className="h-[300px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={registrationData}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
+                        <XAxis 
+                          dataKey="name" 
+                          stroke="#94a3b8" 
+                          tick={{ fill: "#94a3b8" }} 
+                          axisLine={{ stroke: "#334155" }}
+                        />
+                        <YAxis 
+                          stroke="#94a3b8" 
+                          tick={{ fill: "#94a3b8" }} 
+                          axisLine={{ stroke: "#334155" }}
+                        />
+                        <RechartsTooltip 
+                          contentStyle={{ backgroundColor: "#0B1C2D", borderColor: "#C6A75E", color: "#fff" }}
+                          cursor={{ fill: "rgba(198, 167, 94, 0.1)" }}
+                        />
+                        <Bar dataKey="registros" fill="#C6A75E" radius={[4, 4, 0, 0]} name="Nuevos Registros" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </Card>
+              </div>
             </motion.div>
           </TabsContent>
 
