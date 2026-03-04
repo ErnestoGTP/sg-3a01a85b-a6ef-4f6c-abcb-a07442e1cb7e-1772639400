@@ -27,7 +27,8 @@ import {
   Settings,
   QrCode,
   UserPlus,
-  BarChart as BarChartIcon
+  BarChart as BarChartIcon,
+  User
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -521,6 +522,15 @@ export default function AdminDashboard() {
               >
                 <QrCode className="w-4 h-4 mr-2" />
                 Escáner QR
+              </Button>
+            </Link>
+            <Link href="/admin/profile">
+              <Button
+                variant="outline"
+                className="border-[#C6A75E] text-[#C6A75E] hover:bg-[#C6A75E] hover:text-[#0B1C2D]"
+              >
+                <User className="w-4 h-4 mr-2" />
+                Mi Perfil
               </Button>
             </Link>
             <Button
