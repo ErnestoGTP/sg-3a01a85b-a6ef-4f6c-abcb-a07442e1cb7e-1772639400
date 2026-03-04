@@ -55,15 +55,30 @@ export function Navbar() {
       >
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-20">
-            {/* Logo */}
-            <Link
-              href="/"
-              className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
-            >
-              <Logo variant="light" size="sm" />
-              <span className="hidden sm:inline text-white font-semibold text-lg">
-                {workshopConfig.brand.tagline}
-              </span>
+            {/* Logo and Brand - Mobile */}
+            <Link href="/" className="flex items-center space-x-3 lg:hidden">
+              <Logo className="h-10 w-10" />
+              <div className="flex flex-col">
+                <span className="font-bold text-lg text-white">
+                  Ramitap Training
+                </span>
+                <span className="text-xs text-gold-light">
+                  {workshopConfig.brand.tagline}
+                </span>
+              </div>
+            </Link>
+
+            {/* Logo and Brand - Desktop/Tablet */}
+            <Link href="/" className="hidden lg:flex items-center space-x-3">
+              <Logo className="h-12 w-12" />
+              <div className="flex flex-col">
+                <span className="font-bold text-xl text-white">
+                  Ramitap Training
+                </span>
+                <span className="text-sm text-gold-light">
+                  {workshopConfig.brand.tagline}
+                </span>
+              </div>
             </Link>
 
             {/* Desktop Menu */}
