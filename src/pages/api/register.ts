@@ -3,6 +3,7 @@ import { sendConfirmationEmail } from "@/lib/email";
 import { workshopConfig } from "@/config/workshop";
 import { promises as fs } from "fs";
 import path from "path";
+import QRCode from "qrcode";
 
 interface RegistrationData {
   name: string;
@@ -71,7 +72,12 @@ export default async function handler(
     registrations.push(newRegistration);
     await fs.writeFile(filePath, JSON.stringify(registrations, null, 2));
 
-    const emailSent = await sendConfirmationEmail({ name, email, phone });
+    // Generar QR
+    const qrString = `Registro Taller PNL | Nombre: ${name} | Email: ${email} | Tel: ${phone}`;
+    const qrCodeDataUrl = await QRCode.toDataURL(qrString);
+
+    // Enviar email con QR
+    const emailSent = await sendConfirmationEmail({ name, email, phone }, qrCodeDataUrl);
 
     if (!emailSent) {
       console.warn("⚠️ Registration saved but email failed:", email);
