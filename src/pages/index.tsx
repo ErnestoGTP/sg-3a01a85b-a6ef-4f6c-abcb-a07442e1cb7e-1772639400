@@ -72,7 +72,7 @@ export const getServerSideProps: GetServerSideProps = async () => {
       event: {
         ...staticConfig.event,
         title: data.title || staticConfig.event.title,
-        date: data.date ? new Date(data.date).toLocaleDateString("es-MX", { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : staticConfig.event.date,
+        date: data.date || staticConfig.event.date,
         time: data.time || staticConfig.event.time,
         location: data.location || staticConfig.event.location,
       },
