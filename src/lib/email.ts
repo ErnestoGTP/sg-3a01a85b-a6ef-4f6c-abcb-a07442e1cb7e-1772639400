@@ -1,8 +1,5 @@
 import { workshopConfig } from "@/config/workshop";
-import { Resend } from "resend";
-
-// Initialize Resend
-const resend = new Resend(process.env.RESEND_API_KEY);
+import nodemailer from "nodemailer";
 
 export interface RegistrationData {
   name: string;
@@ -121,23 +118,34 @@ export function generateEmailHtml(data: EmailData): string {
 }
 
 /**
- * Sends confirmation email using Resend
+ * Sends confirmation email using Nodemailer with Gmail SMTP
  */
 export async function sendConfirmationEmail(data: EmailData, qrCodeDataUrl?: string): Promise<boolean> {
   try {
-    // Check if Resend is enabled
+    // Check if email is enabled
     if (process.env.EMAIL_ENABLED !== "true") {
       console.log("📧 Email is disabled (EMAIL_ENABLED=false)");
       return false;
     }
 
-    // Check if Resend API key is configured
-    if (!process.env.RESEND_API_KEY) {
-      console.error("❌ RESEND_API_KEY is not configured");
+    // Check if SMTP credentials are configured
+    if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
+      console.error("❌ SMTP credentials not configured");
       return false;
     }
 
     console.log("📧 Sending confirmation email to:", data.email);
+
+    // Create Nodemailer transporter with Gmail SMTP (SSL)
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: Number(process.env.SMTP_PORT) || 465,
+      secure: true, // SSL for port 465
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+    });
 
     const emailHtml = generateEmailHtml(data);
     
@@ -153,8 +161,7 @@ export async function sendConfirmationEmail(data: EmailData, qrCodeDataUrl?: str
           attachments.push({
             content: Buffer.from(base64Data, 'base64'),
             filename: 'ticket-qr.png',
-            content_id: 'qr-code',
-            disposition: 'inline',
+            cid: 'qr-code', // Content-ID for inline image
           });
           console.log("✅ QR code attachment prepared");
         } else {
@@ -166,9 +173,9 @@ export async function sendConfirmationEmail(data: EmailData, qrCodeDataUrl?: str
       }
     }
 
-    // Send email using Resend
-    const emailOptions: any = {
-      from: process.env.EMAIL_FROM || "Ramitap Training <onboarding@resend.dev>",
+    // Email options
+    const mailOptions: any = {
+      from: process.env.EMAIL_FROM,
       to: data.email,
       subject: `Tu pase y siguientes pasos – ${workshopConfig.event.title}`,
       html: emailHtml,
@@ -176,17 +183,13 @@ export async function sendConfirmationEmail(data: EmailData, qrCodeDataUrl?: str
 
     // Only add attachments if we have any
     if (attachments.length > 0) {
-      emailOptions.attachments = attachments;
+      mailOptions.attachments = attachments;
     }
 
-    const result = await resend.emails.send(emailOptions);
+    // Send email using Nodemailer
+    const info = await transporter.sendMail(mailOptions);
 
-    if (result.error) {
-      console.error("❌ Error sending email via Resend:", result.error);
-      return false;
-    }
-
-    console.log("✅ Confirmation email sent successfully via Resend:", result.data?.id);
+    console.log("✅ Confirmation email sent successfully via Nodemailer:", info.messageId);
     return true;
 
   } catch (error) {
@@ -199,136 +202,138 @@ export async function sendConfirmationEmail(data: EmailData, qrCodeDataUrl?: str
   }
 }
 
-// Keep existing recovery email function
+/**
+ * Sends password recovery email using Nodemailer
+ */
 export async function sendPasswordRecoveryEmail(email: string): Promise<boolean> {
   const emailEnabled = process.env.EMAIL_ENABLED === "true";
-  const resendApiKey = process.env.RESEND_API_KEY;
+  const smtpConfigured = process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS;
 
-  if (!emailEnabled || !resendApiKey) {
+  if (!emailEnabled || !smtpConfigured) {
     console.log("Email system disabled or not configured");
     return false;
   }
 
   try {
-    const response = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${resendApiKey}`,
+    // Create Nodemailer transporter with Gmail SMTP (SSL)
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: Number(process.env.SMTP_PORT) || 465,
+      secure: true, // SSL for port 465
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
       },
-      body: JSON.stringify({
-        from: process.env.EMAIL_FROM || "Ramitap Training <onboarding@resend.dev>",
-        to: email,
-        subject: "🔐 Recuperación de Contraseña - Admin Dashboard",
-        html: `
-          <!DOCTYPE html>
-          <html>
-            <head>
-              <meta charset="utf-8">
-              <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            </head>
-            <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;">
-              <table role="presentation" style="width: 100%; border-collapse: collapse;">
-                <tr>
-                  <td align="center" style="padding: 40px 0;">
-                    <table role="presentation" style="width: 600px; border-collapse: collapse; background-color: #ffffff; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-                      
-                      <!-- Header -->
-                      <tr>
-                        <td style="background: linear-gradient(135deg, #0B1C2D 0%, #1a2332 100%); padding: 40px 30px; text-align: center;">
-                          <h1 style="margin: 0; color: #C6A75E; font-size: 28px; font-weight: bold;">
-                            🔐 Recuperación de Contraseña
-                          </h1>
-                          <p style="margin: 10px 0 0; color: #ffffff; font-size: 16px;">
-                            Admin Dashboard - Ramitap Training
-                          </p>
-                        </td>
-                      </tr>
-
-                      <!-- Content -->
-                      <tr>
-                        <td style="padding: 40px 30px;">
-                          <p style="margin: 0 0 20px; color: #333333; font-size: 16px; line-height: 1.6;">
-                            Hola Admin,
-                          </p>
-                          
-                          <p style="margin: 0 0 20px; color: #333333; font-size: 16px; line-height: 1.6;">
-                            Recibimos una solicitud para recuperar la contraseña de acceso al dashboard de administración del <strong>Taller de PNL</strong>.
-                          </p>
-
-                          <!-- Password Box -->
-                          <table role="presentation" style="width: 100%; border-collapse: collapse; margin: 30px 0;">
-                            <tr>
-                              <td style="background-color: #f8f9fa; border-left: 4px solid #C6A75E; padding: 20px; border-radius: 4px;">
-                                <p style="margin: 0 0 10px; color: #666666; font-size: 14px;">
-                                  <strong>Tu contraseña actual es:</strong>
-                                </p>
-                                <p style="margin: 0; color: #0B1C2D; font-size: 20px; font-family: 'Courier New', monospace; font-weight: bold;">
-                                  ${process.env.ADMIN_PASSWORD || "RamitapAdmin2026!"}
-                                </p>
-                              </td>
-                            </tr>
-                          </table>
-
-                          <p style="margin: 0 0 20px; color: #333333; font-size: 16px; line-height: 1.6;">
-                            Si deseas cambiar tu contraseña, debes actualizar la variable de entorno <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: monospace;">ADMIN_PASSWORD</code> en tu archivo <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: monospace;">.env.local</code> o en la configuración de tu hosting (Vercel).
-                          </p>
-
-                          <!-- Access Button -->
-                          <table role="presentation" style="width: 100%; border-collapse: collapse; margin: 30px 0;">
-                            <tr>
-                              <td align="center">
-                                <a href="${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/admin/login" 
-                                   style="display: inline-block; background-color: #C6A75E; color: #ffffff; text-decoration: none; padding: 15px 40px; border-radius: 6px; font-size: 16px; font-weight: bold;">
-                                  Acceder al Dashboard
-                                </a>
-                              </td>
-                            </tr>
-                          </table>
-
-                          <div style="margin: 30px 0; padding: 20px; background-color: #fff3cd; border-left: 4px solid #ffc107; border-radius: 4px;">
-                            <p style="margin: 0; color: #856404; font-size: 14px; line-height: 1.6;">
-                              <strong>⚠️ Seguridad:</strong> Si no solicitaste esta recuperación, alguien podría estar intentando acceder a tu cuenta. Te recomendamos cambiar tu contraseña inmediatamente.
-                            </p>
-                          </div>
-
-                          <p style="margin: 20px 0 0; color: #666666; font-size: 14px; line-height: 1.6;">
-                            Si tienes alguna duda, responde este email o contacta a soporte.
-                          </p>
-                        </td>
-                      </tr>
-
-                      <!-- Footer -->
-                      <tr>
-                        <td style="background-color: #f8f9fa; padding: 30px; text-align: center; border-top: 1px solid #e9ecef;">
-                          <p style="margin: 0 0 10px; color: #666666; font-size: 14px;">
-                            <strong>Ramitap Training</strong><br>
-                            Transformando vidas a través de PNL
-                          </p>
-                          <p style="margin: 0; color: #999999; font-size: 12px;">
-                            Este es un email automático del sistema de administración.
-                          </p>
-                        </td>
-                      </tr>
-
-                    </table>
-                  </td>
-                </tr>
-              </table>
-            </body>
-          </html>
-        `,
-      }),
     });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error("Resend API error:", errorData);
-      return false;
-    }
+    const mailOptions = {
+      from: process.env.EMAIL_FROM,
+      to: email,
+      subject: "🔐 Recuperación de Contraseña - Admin Dashboard",
+      html: `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          </head>
+          <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;">
+            <table role="presentation" style="width: 100%; border-collapse: collapse;">
+              <tr>
+                <td align="center" style="padding: 40px 0;">
+                  <table role="presentation" style="width: 600px; border-collapse: collapse; background-color: #ffffff; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                    
+                    <!-- Header -->
+                    <tr>
+                      <td style="background: linear-gradient(135deg, #0B1C2D 0%, #1a2332 100%); padding: 40px 30px; text-align: center;">
+                        <h1 style="margin: 0; color: #C6A75E; font-size: 28px; font-weight: bold;">
+                          🔐 Recuperación de Contraseña
+                        </h1>
+                        <p style="margin: 10px 0 0; color: #ffffff; font-size: 16px;">
+                          Admin Dashboard - Ramitap Training
+                        </p>
+                      </td>
+                    </tr>
 
-    console.log("Password recovery email sent successfully to:", email);
+                    <!-- Content -->
+                    <tr>
+                      <td style="padding: 40px 30px;">
+                        <p style="margin: 0 0 20px; color: #333333; font-size: 16px; line-height: 1.6;">
+                          Hola Admin,
+                        </p>
+                        
+                        <p style="margin: 0 0 20px; color: #333333; font-size: 16px; line-height: 1.6;">
+                          Recibimos una solicitud para recuperar la contraseña de acceso al dashboard de administración del <strong>Taller de PNL</strong>.
+                        </p>
+
+                        <!-- Password Box -->
+                        <table role="presentation" style="width: 100%; border-collapse: collapse; margin: 30px 0;">
+                          <tr>
+                            <td style="background-color: #f8f9fa; border-left: 4px solid #C6A75E; padding: 20px; border-radius: 4px;">
+                              <p style="margin: 0 0 10px; color: #666666; font-size: 14px;">
+                                <strong>Tu contraseña actual es:</strong>
+                              </p>
+                              <p style="margin: 0; color: #0B1C2D; font-size: 20px; font-family: 'Courier New', monospace; font-weight: bold;">
+                                ${process.env.ADMIN_PASSWORD || "RamitapAdmin2026!"}
+                              </p>
+                            </td>
+                          </tr>
+                        </table>
+
+                        <p style="margin: 0 0 20px; color: #333333; font-size: 16px; line-height: 1.6;">
+                          Si deseas cambiar tu contraseña, debes actualizar la variable de entorno <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: monospace;">ADMIN_PASSWORD</code> en tu archivo <code style="background-color: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-family: monospace;">.env.local</code> o en la configuración de tu hosting (Vercel).
+                        </p>
+
+                        <!-- Access Button -->
+                        <table role="presentation" style="width: 100%; border-collapse: collapse; margin: 30px 0;">
+                          <tr>
+                            <td align="center">
+                              <a href="${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/admin/login" 
+                                 style="display: inline-block; background-color: #C6A75E; color: #ffffff; text-decoration: none; padding: 15px 40px; border-radius: 6px; font-size: 16px; font-weight: bold;">
+                                Acceder al Dashboard
+                              </a>
+                            </td>
+                          </tr>
+                        </table>
+
+                        <div style="margin: 30px 0; padding: 20px; background-color: #fff3cd; border-left: 4px solid #ffc107; border-radius: 4px;">
+                          <p style="margin: 0; color: #856404; font-size: 14px; line-height: 1.6;">
+                            <strong>⚠️ Seguridad:</strong> Si no solicitaste esta recuperación, alguien podría estar intentando acceder a tu cuenta. Te recomendamos cambiar tu contraseña inmediatamente.
+                          </p>
+                        </div>
+
+                        <p style="margin: 20px 0 0; color: #666666; font-size: 14px; line-height: 1.6;">
+                          Si tienes alguna duda, responde este email o contacta a soporte.
+                        </p>
+                      </td>
+                    </tr>
+
+                    <!-- Footer -->
+                    <tr>
+                      <td style="background-color: #f8f9fa; padding: 30px; text-align: center; border-top: 1px solid #e9ecef;">
+                        <p style="margin: 0 0 10px; color: #666666; font-size: 14px;">
+                          <strong>Ramitap Training</strong><br>
+                          Transformando vidas a través de PNL
+                        </p>
+                        <p style="margin: 0; color: #999999; font-size: 12px;">
+                          Este es un email automático del sistema de administración.
+                        </p>
+                      </td>
+                    </tr>
+
+                  </table>
+                </td>
+              </tr>
+            </table>
+          </body>
+        </html>
+      `,
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log("Password recovery email sent successfully to:", email, "MessageID:", info.messageId);
     return true;
+
   } catch (error) {
     console.error("Error sending password recovery email:", error);
     return false;

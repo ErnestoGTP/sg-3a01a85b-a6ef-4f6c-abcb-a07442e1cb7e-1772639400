@@ -1,9 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Logo } from "@/components/Logo";
+import Link from "next/link";
 import { Menu, X } from "lucide-react";
+import { Logo } from "./Logo";
+import { Button } from "./ui/button";
+import { workshopConfig } from "@/config/workshop";
 
 export function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -18,13 +20,29 @@ export function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const scrollToForm = () => {
-    const formElement = document.getElementById("registro");
-    if (formElement) {
-      formElement.scrollIntoView({ behavior: "smooth", block: "center" });
-      setIsMobileMenuOpen(false);
+  const scrollToSection = (sectionId: string) => {
+    setIsMobileMenuOpen(false);
+    const element = document.getElementById(sectionId);
+    if (element) {
+      const offset = 80;
+      const elementPosition = element.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - offset;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: "smooth",
+      });
     }
   };
+
+  const menuItems = [
+    { label: "Inicio", id: "hero" },
+    { label: "¿Qué es PNL?", id: "que-es-pnl" },
+    { label: "Aprenderás", id: "aprenderas" },
+    { label: "Detalles", id: "detalles" },
+    { label: "Registro", id: "registro" },
+    { label: "FAQ", id: "faq" },
+  ];
 
   return (
     <>
@@ -38,58 +56,132 @@ export function Navbar() {
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-20">
             {/* Logo */}
-            <Logo variant="light" />
+            <Link
+              href="/"
+              className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
+            >
+              <Logo variant="light" size="sm" />
+              <span className="hidden sm:inline text-white font-semibold text-lg">
+                {workshopConfig.brand.name}
+              </span>
+            </Link>
 
-            {/* Desktop CTA */}
-            <div className="hidden md:block">
+            {/* Desktop Menu */}
+            <div className="hidden lg:flex items-center space-x-8">
+              {menuItems.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => scrollToSection(item.id)}
+                  className="text-white/80 hover:text-[#C6A75E] transition-colors text-sm font-medium"
+                >
+                  {item.label}
+                </button>
+              ))}
               <Button
-                onClick={scrollToForm}
-                size="lg"
-                className="bg-[#C6A75E] hover:bg-[#d4b76f] text-[#0B1C2D] font-bold rounded-full shadow-lg shadow-[#C6A75E]/20 hover:shadow-xl hover:shadow-[#C6A75E]/30 transition-all duration-300 hover:scale-105"
+                onClick={() => scrollToSection("registro")}
+                className="bg-[#C6A75E] hover:bg-[#C6A75E]/90 text-[#0B1C2D] font-semibold"
               >
-                Reservar mi lugar
+                Inscríbete
               </Button>
             </div>
 
             {/* Mobile Menu Button */}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="md:hidden text-white p-2 hover:bg-white/10 rounded-lg transition-colors"
+              className="lg:hidden text-white p-2 hover:bg-white/10 rounded-lg transition-colors"
               aria-label="Toggle menu"
             >
-              {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+              {isMobileMenuOpen ? (
+                <X className="w-6 h-6" />
+              ) : (
+                <Menu className="w-6 h-6" />
+              )}
             </button>
           </div>
         </div>
+      </nav>
 
-        {/* Mobile Menu */}
-        {isMobileMenuOpen && (
-          <div className="md:hidden bg-[#0B1C2D] border-t border-white/10">
-            <div className="container mx-auto px-4 py-4">
-              <Button
-                onClick={scrollToForm}
-                size="lg"
-                className="w-full bg-[#C6A75E] hover:bg-[#d4b76f] text-[#0B1C2D] font-bold rounded-full shadow-lg"
+      {/* Mobile Sidebar Menu */}
+      <div
+        className={`fixed inset-0 z-40 lg:hidden transition-opacity duration-300 ${
+          isMobileMenuOpen
+            ? "opacity-100 pointer-events-auto"
+            : "opacity-0 pointer-events-none"
+        }`}
+      >
+        {/* Backdrop */}
+        <div
+          className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+
+        {/* Sidebar */}
+        <div
+          className={`absolute top-0 right-0 h-full w-80 max-w-[85vw] bg-gradient-to-br from-[#0B1C2D] to-[#1a2f45] shadow-2xl transform transition-transform duration-300 ${
+            isMobileMenuOpen ? "translate-x-0" : "translate-x-full"
+          }`}
+        >
+          {/* Sidebar Header */}
+          <div className="flex items-center justify-between p-6 border-b border-white/10">
+            <div className="flex items-center space-x-3">
+              <Logo variant="light" size="sm" />
+              <span className="text-white font-semibold">
+                {workshopConfig.brand.name}
+              </span>
+            </div>
+            <button
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="text-white/70 hover:text-white p-2 hover:bg-white/10 rounded-lg transition-colors"
+              aria-label="Close menu"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          {/* Menu Items */}
+          <div className="flex flex-col py-6 px-4 space-y-2">
+            {menuItems.map((item, index) => (
+              <button
+                key={item.id}
+                onClick={() => scrollToSection(item.id)}
+                className="text-left text-white/80 hover:text-white hover:bg-white/10 px-4 py-3 rounded-lg transition-all transform hover:translate-x-1"
+                style={{
+                  animationDelay: `${index * 50}ms`,
+                }}
               >
-                Reservar mi lugar
+                <span className="text-lg font-medium">{item.label}</span>
+              </button>
+            ))}
+
+            <div className="pt-4">
+              <Button
+                onClick={() => scrollToSection("registro")}
+                className="w-full bg-[#C6A75E] hover:bg-[#C6A75E]/90 text-[#0B1C2D] font-semibold py-3 text-lg"
+              >
+                Inscríbete Ahora
               </Button>
             </div>
           </div>
-        )}
-      </nav>
 
-      {/* Sticky Mobile CTA Bar - Shows when scrolled past hero */}
-      {isScrolled && (
-        <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#0B1C2D]/95 backdrop-blur-md border-t-2 border-[#C6A75E]/30 p-4 shadow-2xl animate-in slide-in-from-bottom duration-300">
-          <Button
-            onClick={scrollToForm}
-            size="lg"
-            className="w-full bg-[#C6A75E] hover:bg-[#d4b76f] text-[#0B1C2D] font-bold text-lg rounded-full shadow-lg shadow-[#C6A75E]/30 hover:shadow-xl hover:shadow-[#C6A75E]/40 transition-all duration-300"
-          >
-            Reservar mi lugar ahora
-          </Button>
+          {/* Sidebar Footer */}
+          <div className="absolute bottom-0 left-0 right-0 p-6 border-t border-white/10">
+            <div className="text-center">
+              <p className="text-white/60 text-sm mb-2">
+                {workshopConfig.event.name}
+              </p>
+              <p className="text-[#C6A75E] font-semibold text-sm">
+                {workshopConfig.event.date}
+              </p>
+              <p className="text-white/60 text-sm">
+                {workshopConfig.event.time}
+              </p>
+            </div>
+          </div>
         </div>
-      )}
+      </div>
+
+      {/* Spacer */}
+      <div className="h-20" />
     </>
   );
 }

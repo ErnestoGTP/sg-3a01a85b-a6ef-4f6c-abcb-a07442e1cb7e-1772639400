@@ -9,8 +9,8 @@ interface SEOProps {
 
 // SEO elements that can be used in _document.tsx (returns JSX without Head wrapper)
 export function SEOElements({
-  title = "Hello World",
-  description = "Welcome to my app",
+  title = "Ramitap Training - PNL",
+  description = "Ramitap Training, entrenamientos de Programacion neuro Linguistica, Desarrollo Humano, Neuro Semantica, manejo de emociones, creencias limitantes, resolucion de conflictos, coaching ejecutivo, comunicacion eficaz, resiliencia, rapport,",
   image = "/og-image.png",
   url,
 }: SEOProps) {
