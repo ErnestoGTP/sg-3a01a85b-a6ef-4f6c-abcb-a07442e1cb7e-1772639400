@@ -142,30 +142,44 @@ export async function sendConfirmationEmail(data: EmailData, qrCodeDataUrl?: str
     const emailHtml = generateEmailHtml(data);
     
     // Prepare attachments
-    const attachments = [];
+    const attachments: any[] = [];
     if (qrCodeDataUrl) {
-      // Convert data URL to buffer for attachment
-      // Data URL format: data:image/png;base64,iVBORw0KGgo...
-      const base64Data = qrCodeDataUrl.split(';base64,').pop();
-      
-      if (base64Data) {
-        attachments.push({
-          content: Buffer.from(base64Data, 'base64'),
-          filename: 'ticket-qr.png',
-          content_id: 'qr-code', // This matches the cid:qr-code in HTML
-          disposition: 'inline', // Display inline
-        });
+      try {
+        // Convert data URL to buffer for attachment
+        const base64Match = qrCodeDataUrl.match(/^data:image\/png;base64,(.+)$/);
+        
+        if (base64Match && base64Match[1]) {
+          const base64Data = base64Match[1];
+          attachments.push({
+            content: Buffer.from(base64Data, 'base64'),
+            filename: 'ticket-qr.png',
+            content_id: 'qr-code',
+            disposition: 'inline',
+          });
+          console.log("✅ QR code attachment prepared");
+        } else {
+          console.warn("⚠️ QR code data URL format invalid, skipping attachment");
+        }
+      } catch (attachError) {
+        console.error("⚠️ Error preparing QR attachment:", attachError);
+        // Continue without QR - not critical
       }
     }
 
     // Send email using Resend
-    const result = await resend.emails.send({
+    const emailOptions: any = {
       from: process.env.EMAIL_FROM || "Ramitap Training <onboarding@resend.dev>",
       to: data.email,
       subject: `Tu pase y siguientes pasos – ${workshopConfig.event.title}`,
       html: emailHtml,
-      attachments: attachments.length > 0 ? attachments : undefined,
-    });
+    };
+
+    // Only add attachments if we have any
+    if (attachments.length > 0) {
+      emailOptions.attachments = attachments;
+    }
+
+    const result = await resend.emails.send(emailOptions);
 
     if (result.error) {
       console.error("❌ Error sending email via Resend:", result.error);
@@ -177,6 +191,10 @@ export async function sendConfirmationEmail(data: EmailData, qrCodeDataUrl?: str
 
   } catch (error) {
     console.error("❌ Error sending email:", error);
+    if (error instanceof Error) {
+      console.error("❌ Error message:", error.message);
+      console.error("❌ Error stack:", error.stack);
+    }
     return false;
   }
 }
