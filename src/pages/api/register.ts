@@ -11,10 +11,6 @@ const registrationSchema = z.object({
   phone: z.string().min(8, "El teléfono debe tener al menos 8 dígitos")
 });
 
-/**
- * CRITICAL: Clean registration endpoint - NO DATABASE, always returns success
- * Priority: User must ALWAYS reach payment screen (Screen 3)
- */
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
@@ -62,7 +58,8 @@ export default async function handler(
       // Continue without QR - not critical
     }
 
-    // Save to database (non-blocking)
+    // Save to database with try/catch for network resilience
+    let participantId = null;
     try {
       console.log("💾 Saving participant to database...");
       const { data: participant, error: dbError } = await supabase
@@ -79,20 +76,30 @@ export default async function handler(
         .single();
 
       if (dbError) {
-        console.error("⚠️ Database save failed (non-critical):", dbError);
+        console.error("⚠️ Database save failed:", dbError);
+        // Continue - don't block registration
       } else {
-        console.log("✅ Participant saved to database:", participant.id);
+        participantId = participant.id;
+        console.log("✅ Participant saved to database:", participantId);
       }
     } catch (dbError) {
-      console.error("⚠️ Database error (non-critical):", dbError);
+      console.error("⚠️ Database connection error (non-blocking):", dbError);
+      // Continue - email is more critical than DB
     }
 
-    // Send email (CRITICAL: Non-blocking, always return success)
-    try {
-      console.log("📧 Attempting to send confirmation email...");
-      
-      // Only try to send email if credentials are configured
-      if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
+    // Send confirmation email with nodemailer
+    const emailEnabled = process.env.EMAIL_ENABLED === "true";
+    
+    if (emailEnabled) {
+      try {
+        console.log("📧 Sending confirmation email...");
+        
+        // Verify SMTP credentials are configured
+        if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
+          console.error("❌ SMTP credentials not configured");
+          throw new Error("Email configuration missing");
+        }
+
         // Create transporter with Gmail SMTP (SSL)
         const transporter = nodemailer.createTransport({
           host: process.env.SMTP_HOST,
@@ -132,34 +139,31 @@ export default async function handler(
           mailOptions.attachments = attachments;
         }
 
-        // Send email
-        const info = await transporter.sendMail(mailOptions);
-        console.log("✅ Email sent successfully:", info.messageId);
-      } else {
-        console.log("⚠️ SMTP not configured, skipping email");
+        // Send email - CRITICAL: Must complete before response
+        await transporter.sendMail(mailOptions);
+        console.log("✅ Confirmation email sent successfully to:", email);
+        
+      } catch (emailError) {
+        console.error("❌ Email sending failed:", emailError);
+        // Log error but continue - user registered successfully
       }
-    } catch (emailError) {
-      console.error("⚠️ Email sending failed (non-critical):", emailError);
-      // CRITICAL: Don't throw - continue to success response
+    } else {
+      console.log("⚠️ Email disabled in config - skipping email send");
     }
 
-    // ALWAYS return success - user must reach payment screen
-    console.log("✅ Registration processed successfully for:", email);
+    // Success response - registration complete
+    console.log("✅ Registration completed successfully for:", email);
     return res.status(200).json({
       success: true,
       message: "¡Registro exitoso! Revisa tu email para los siguientes pasos.",
-      redirect: "/gracias" // Added for conversion tracking
+      redirect: "/gracias"
     });
 
   } catch (error) {
-    console.error("❌ Unexpected error in registration:", error);
-    
-    // CRITICAL: Even on error, return success to prevent user frustration
-    // Better to show payment instructions than error screen
-    return res.status(200).json({
-      success: true,
-      message: "¡Registro recibido! Te contactaremos pronto con los detalles.",
-      redirect: "/gracias" // Added for conversion tracking
+    console.error("❌ Registration error:", error);
+    return res.status(500).json({
+      success: false,
+      error: "Error al procesar el registro. Por favor intenta nuevamente."
     });
   }
 }
@@ -232,7 +236,7 @@ function generateEmailHtml(data: { name: string; email: string; phone: string })
                     </div>
 
                     <div style="text-align: center;">
-                       <a href="https://wa.me/526621234567?text=Hola%2C%20soy%20${encodeURIComponent(name)}%2C%20acabo%20de%20registrarme%20al%20Taller%20de%20PNL%20y%20aqu%C3%AD%20est%C3%A1%20mi%20comprobante%20de%20pago." style="display: inline-block; padding: 14px 24px; background-color: #25D366; color: #ffffff; text-decoration: none; border-radius: 50px; font-weight: bold; font-size: 15px;">
+                       <a href="https://wa.me/5216626516705?text=Hola%2C%20soy%20${encodeURIComponent(name)}%2C%20acabo%20de%20registrarme%20al%20Taller%20de%20PNL%20y%20aqu%C3%AD%20est%C3%A1%20mi%20comprobante%20de%20pago." style="display: inline-block; padding: 14px 24px; background-color: #25D366; color: #ffffff; text-decoration: none; border-radius: 50px; font-weight: bold; font-size: 15px;">
                         📲 Enviar Comprobante por WhatsApp
                       </a>
                     </div>
