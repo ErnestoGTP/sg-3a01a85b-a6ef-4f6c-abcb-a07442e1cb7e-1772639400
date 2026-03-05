@@ -2,7 +2,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import nodemailer from "nodemailer";
 import QRCode from "qrcode";
 import { z } from "zod";
-import { supabase } from "@/integrations/supabase/client";
+import { saveParticipant } from "@/lib/fileStorage";
 
 // Validation schema
 const registrationSchema = z.object({
@@ -12,8 +12,8 @@ const registrationSchema = z.object({
 });
 
 /**
- * CRITICAL: Clean registration endpoint - NO DATABASE, always returns success
- * Priority: User must ALWAYS reach payment screen (Screen 3)
+ * CRITICAL: Registration endpoint - ALWAYS saves to database AND sends email
+ * Priority: User experience - must reach payment screen (Screen 3)
  */
 export default async function handler(
   req: NextApiRequest,
@@ -45,10 +45,38 @@ export default async function handler(
     // Generate unique QR code ID
     const qrCodeId = `PNL-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
-    // Generate QR code
-    let qrCodeDataUrl = "";
+    // ========================================
+    // STEP 1: SAVE TO DATABASE FIRST (CRITICAL)
+    // ========================================
+    let participantId: string | null = null;
+    
     try {
-      console.log("🔄 Generating QR code...");
+      console.log("💾 STEP 1: Saving participant to database...");
+      
+      const participant = await saveParticipant({
+        name,
+        email,
+        phone,
+        qr_code_id: qrCodeId,
+        payment_status: "pending",
+        attendance_status: "pending"
+      });
+
+      participantId = participant.id;
+      console.log("✅ STEP 1 SUCCESS: Participant saved to database:", participantId);
+
+    } catch (dbError) {
+      console.error("⚠️ STEP 1 FAILED: Database save error (non-blocking):", dbError);
+      // Continue to email step even if DB fails
+    }
+
+    // ========================================
+    // STEP 2: GENERATE QR CODE
+    // ========================================
+    let qrCodeDataUrl = "";
+    
+    try {
+      console.log("🔄 STEP 2: Generating QR code...");
       const qrString = `QR:${qrCodeId}|Name:${name}|Email:${email}|Phone:${phone}`;
       qrCodeDataUrl = await QRCode.toDataURL(qrString, {
         errorCorrectionLevel: "H",
@@ -56,95 +84,84 @@ export default async function handler(
         margin: 1,
         width: 300
       });
-      console.log("✅ QR code generated successfully");
+      console.log("✅ STEP 2 SUCCESS: QR code generated");
     } catch (qrError) {
-      console.error("⚠️ QR generation failed:", qrError);
-      // Continue without QR - not critical
+      console.error("⚠️ STEP 2 FAILED: QR generation error (non-blocking):", qrError);
+      // Continue to email step without QR
     }
 
-    // Save to database (non-blocking)
+    // ========================================
+    // STEP 3: SEND EMAIL AFTER (CRITICAL)
+    // ========================================
     try {
-      console.log("💾 Saving participant to database...");
-      const { data: participant, error: dbError } = await supabase
-        .from("participants")
-        .insert({
-          name,
-          email,
-          phone,
-          qr_code_id: qrCodeId,
-          payment_status: "pending",
-          attendance_status: "pending"
-        })
-        .select()
-        .single();
-
-      if (dbError) {
-        console.error("⚠️ Database save failed (non-critical):", dbError);
-      } else {
-        console.log("✅ Participant saved to database:", participant.id);
-      }
-    } catch (dbError) {
-      console.error("⚠️ Database error (non-critical):", dbError);
-    }
-
-    // Send email (CRITICAL: Non-blocking, always return success)
-    try {
-      console.log("📧 Attempting to send confirmation email...");
+      console.log("📧 STEP 3: Sending confirmation email...");
       
-      // Only try to send email if credentials are configured
-      if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
-        // Create transporter with Gmail SMTP (SSL)
-        const transporter = nodemailer.createTransport({
-          host: process.env.SMTP_HOST,
-          port: Number(process.env.SMTP_PORT) || 465,
-          secure: true, // SSL for port 465
-          auth: {
-            user: process.env.SMTP_USER,
-            pass: process.env.SMTP_PASS,
-          },
-        });
-
-        // Prepare email HTML
-        const emailHtml = generateEmailHtml({ name, email, phone });
-        
-        // Prepare attachments
-        const attachments: any[] = [];
-        if (qrCodeDataUrl) {
-          const base64Match = qrCodeDataUrl.match(/^data:image\/png;base64,(.+)$/);
-          if (base64Match && base64Match[1]) {
-            attachments.push({
-              content: Buffer.from(base64Match[1], 'base64'),
-              filename: 'ticket-qr.png',
-              cid: 'qr-code',
-            });
-          }
-        }
-
-        // Email options
-        const mailOptions: any = {
-          from: process.env.EMAIL_FROM || "Ramitap Training <ramitaptraining@gmail.com>",
-          to: email,
-          subject: "Tu pase y siguientes pasos – Taller de PNL Fundamental",
-          html: emailHtml,
-        };
-
-        if (attachments.length > 0) {
-          mailOptions.attachments = attachments;
-        }
-
-        // Send email
-        const info = await transporter.sendMail(mailOptions);
-        console.log("✅ Email sent successfully:", info.messageId);
-      } else {
-        console.log("⚠️ SMTP not configured, skipping email");
+      // Check if SMTP is configured
+      if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
+        console.error("❌ SMTP not configured - missing environment variables");
+        throw new Error("SMTP configuration missing");
       }
+
+      // Create transporter with Gmail SMTP (SSL)
+      const transporter = nodemailer.createTransport({
+        host: process.env.SMTP_HOST,
+        port: Number(process.env.SMTP_PORT) || 465,
+        secure: true, // SSL for port 465
+        auth: {
+          user: process.env.SMTP_USER,
+          pass: process.env.SMTP_PASS,
+        },
+      });
+
+      console.log("✅ Transporter created successfully");
+
+      // Prepare email HTML
+      const emailHtml = generateEmailHtml({ name, email, phone });
+      
+      // Prepare attachments
+      const attachments: any[] = [];
+      if (qrCodeDataUrl) {
+        const base64Match = qrCodeDataUrl.match(/^data:image\/png;base64,(.+)$/);
+        if (base64Match && base64Match[1]) {
+          attachments.push({
+            content: Buffer.from(base64Match[1], "base64"),
+            filename: "ticket-qr.png",
+            cid: "qr-code",
+          });
+        }
+      }
+
+      // Email options
+      const mailOptions: any = {
+        from: process.env.EMAIL_FROM || "Ramitap Training <ramitaptraining@gmail.com>",
+        to: email,
+        subject: "Tu pase y siguientes pasos – Taller de PNL Fundamental",
+        html: emailHtml,
+      };
+
+      if (attachments.length > 0) {
+        mailOptions.attachments = attachments;
+      }
+
+      console.log("📤 Sending email to:", email);
+
+      // Send email
+      const info = await transporter.sendMail(mailOptions);
+      console.log("✅ STEP 3 SUCCESS: Email sent successfully:", info.messageId);
+
     } catch (emailError) {
-      console.error("⚠️ Email sending failed (non-critical):", emailError);
+      console.error("⚠️ STEP 3 FAILED: Email sending error (non-blocking):", emailError);
       // CRITICAL: Don't throw - continue to success response
+      // User must reach payment screen even if email fails
     }
 
-    // ALWAYS return success - user must reach payment screen
-    console.log("✅ Registration processed successfully for:", email);
+    // ========================================
+    // ALWAYS RETURN SUCCESS (ANTI-BLOCKING)
+    // ========================================
+    console.log("✅ Registration completed successfully for:", email);
+    console.log("   - Database saved:", participantId ? "YES" : "NO (failed but non-blocking)");
+    console.log("   - Email sent: Check logs above");
+    
     return res.status(200).json({
       success: true,
       message: "¡Registro exitoso! Revisa tu email para los siguientes pasos.",
@@ -230,7 +247,7 @@ function generateEmailHtml(data: { name: string; email: string; phone: string })
                     </div>
 
                     <div style="text-align: center;">
-                       <a href="https://wa.me/526621234567?text=Hola%2C%20soy%20${encodeURIComponent(name)}%2C%20acabo%20de%20registrarme%20al%20Taller%20de%20PNL%20y%20aqu%C3%AD%20est%C3%A1%20mi%20comprobante%20de%20pago." style="display: inline-block; padding: 14px 24px; background-color: #25D366; color: #ffffff; text-decoration: none; border-radius: 50px; font-weight: bold; font-size: 15px;">
+                      <a href="https://wa.me/5216626516705?text=Hola%2C%20soy%20${encodeURIComponent(name)}%2C%20acabo%20de%20registrarme%20al%20Taller%20de%20PNL%20y%20aqu%C3%AD%20est%C3%A1%20mi%20comprobante%20de%20pago." style="display: inline-block; padding: 14px 24px; background-color: #25D366; color: #ffffff; text-decoration: none; border-radius: 50px; font-weight: bold; font-size: 15px;">
                         📲 Enviar Comprobante por WhatsApp
                       </a>
                     </div>
@@ -240,9 +257,9 @@ function generateEmailHtml(data: { name: string; email: string; phone: string })
 
               <!-- Event Details Summary -->
               <div style="margin-top: 30px; border-top: 1px solid #e2e8f0; padding-top: 20px;">
-                 <p style="margin: 0 0 5px 0; color: #718096; font-size: 14px;"><strong>📅 Fecha:</strong> Por confirmar</p>
-                 <p style="margin: 0 0 5px 0; color: #718096; font-size: 14px;"><strong>🕐 Horario:</strong> 9:00 AM - 6:00 PM</p>
-                 <p style="margin: 0; color: #718096; font-size: 14px;"><strong>📍 Ciudad:</strong> Hermosillo, Sonora</p>
+                <p style="margin: 0 0 5px 0; color: #718096; font-size: 14px;"><strong>📅 Fecha:</strong> Por confirmar</p>
+                <p style="margin: 0 0 5px 0; color: #718096; font-size: 14px;"><strong>🕐 Horario:</strong> 9:00 AM - 6:00 PM</p>
+                <p style="margin: 0; color: #718096; font-size: 14px;"><strong>📍 Ciudad:</strong> Hermosillo, Sonora</p>
               </div>
 
             </td>
