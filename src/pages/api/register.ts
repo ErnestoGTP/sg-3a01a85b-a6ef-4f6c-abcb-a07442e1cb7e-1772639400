@@ -1,7 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import QRCode from "qrcode";
 import { z } from "zod";
-import { DatabaseAdapter } from "@/lib/dbAdapter";
 import { workshopConfig } from "@/config/workshop";
 import { sendEmail } from "@/lib/emailService";
 
@@ -51,19 +50,28 @@ export default async function handler(
     const qrCodeId = `PNL-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
     try {
-      const participant = await DatabaseAdapter.createParticipant({
-        name,
-        email,
-        phone,
-        qr_code_id: qrCodeId,
-        payment_status: "pending",
-        attendance_status: "pending",
+      // Call internal API to save participant
+      const dbResponse = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/db/participants`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name,
+          email,
+          phone,
+          qr_code_id: qrCodeId,
+          payment_status: "pending",
+          attendance_status: "pending",
+        }),
       });
 
-      if (participant) {
-        console.log("✅ STEP 1 SUCCESS: Participant saved to database:", participant.id);
+      const dbResult = await dbResponse.json();
+
+      if (dbResult.success && dbResult.participant) {
+        console.log("✅ STEP 1 SUCCESS: Participant saved to database:", dbResult.participant.id);
       } else {
-        console.error("⚠️ STEP 1 FAILED (non-blocking): Could not save participant");
+        console.error("⚠️ STEP 1 FAILED (non-blocking): Could not save participant:", dbResult.error);
       }
     } catch (dbError) {
       console.error("⚠️ STEP 1 FAILED (non-blocking):", dbError);
