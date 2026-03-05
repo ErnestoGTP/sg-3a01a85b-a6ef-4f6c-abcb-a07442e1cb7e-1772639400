@@ -2,7 +2,8 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import nodemailer from "nodemailer";
 import QRCode from "qrcode";
 import { z } from "zod";
-import { saveParticipant } from "@/lib/fileStorage";
+import { DatabaseAdapter } from "@/lib/dbAdapter";
+import { workshopConfig } from "@/config/workshop";
 
 // Validation schema
 const registrationSchema = z.object({
@@ -12,8 +13,8 @@ const registrationSchema = z.object({
 });
 
 /**
- * CRITICAL: Registration endpoint - ALWAYS saves to database AND sends email
- * Priority: User experience - must reach payment screen (Screen 3)
+ * CRITICAL: Registration endpoint with Supabase database
+ * Flow: Validate → Save to DB → Send Email → Return 200
  */
 export default async function handler(
   req: NextApiRequest,
@@ -42,31 +43,30 @@ export default async function handler(
       });
     }
 
-    // Generate unique QR code ID
+    // ============================================
+    // STEP 1: SAVE TO DATABASE
+    // ============================================
+    console.log("💾 STEP 1: Saving participant to database...");
+
     const qrCodeId = `PNL-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
-    // ========================================
-    // STEP 1: SAVE TO DATABASE FIRST (CRITICAL)
-    // ========================================
-    let participantId: string | null = null;
-    
     try {
-      console.log("💾 STEP 1: Saving participant to database...");
-      
-      const participant = await saveParticipant({
-        name,
-        email,
-        phone,
+      const participant = await DatabaseAdapter.createParticipant({
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
         qr_code_id: qrCodeId,
         payment_status: "pending",
-        attendance_status: "pending"
+        attendance_status: "pending",
       });
 
-      participantId = participant.id;
-      console.log("✅ STEP 1 SUCCESS: Participant saved to database:", participantId);
-
+      if (participant) {
+        console.log("✅ STEP 1 SUCCESS: Participant saved to database:", participant.id);
+      } else {
+        console.error("⚠️ STEP 1 FAILED (non-blocking): Could not save participant");
+      }
     } catch (dbError) {
-      console.error("⚠️ STEP 1 FAILED: Database save error (non-blocking):", dbError);
+      console.error("⚠️ STEP 1 FAILED (non-blocking):", dbError);
       // Continue to email step even if DB fails
     }
 
@@ -91,7 +91,7 @@ export default async function handler(
     }
 
     // ========================================
-    // STEP 3: SEND EMAIL AFTER (CRITICAL)
+    // STEP 3: SEND EMAIL (NON-BLOCKING)
     // ========================================
     try {
       console.log("📧 STEP 3: Sending confirmation email...");
@@ -159,8 +159,8 @@ export default async function handler(
     // ALWAYS RETURN SUCCESS (ANTI-BLOCKING)
     // ========================================
     console.log("✅ Registration completed successfully for:", email);
-    console.log("   - Database saved:", participantId ? "YES" : "NO (failed but non-blocking)");
-    console.log("   - Email sent: Check logs above");
+    console.log("   - Database saved:", participantId ? "YES ✅" : "NO ❌");
+    console.log("   - Participant ID:", participantId);
     
     return res.status(200).json({
       success: true,
@@ -170,11 +170,10 @@ export default async function handler(
   } catch (error) {
     console.error("❌ Unexpected error in registration:", error);
     
-    // CRITICAL: Even on error, return success to prevent user frustration
-    // Better to show payment instructions than error screen
-    return res.status(200).json({
-      success: true,
-      message: "¡Registro recibido! Te contactaremos pronto con los detalles.",
+    // Return error - don't mask critical failures
+    return res.status(500).json({
+      success: false,
+      error: "Error al procesar el registro. Por favor intenta de nuevo.",
     });
   }
 }

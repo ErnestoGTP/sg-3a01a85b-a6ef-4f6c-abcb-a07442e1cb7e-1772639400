@@ -1,129 +1,163 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { supabase } from "@/integrations/supabase/client";
+import { DatabaseAdapter } from "@/lib/dbAdapter";
+
+/**
+ * ADMIN API: Manage participants
+ * GET: Fetch all participants
+ * POST: Create new participant
+ * PATCH: Update participant status
+ * DELETE: Delete participant
+ */
+
+// Simple auth check using environment variables
+function isAuthenticated(req: NextApiRequest): boolean {
+  const authHeader = req.headers.authorization;
+  
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return false;
+  }
+
+  const token = authHeader.substring(7);
+  const adminEmail = process.env.ADMIN_EMAIL || "ramitaptraining@gmail.com";
+  const adminPassword = process.env.ADMIN_PASSWORD || "Ramitap2025!";
+  
+  try {
+    const decoded = Buffer.from(token, "base64").toString("utf-8");
+    const [email, password] = decoded.split(":");
+    return email === adminEmail && password === adminPassword;
+  } catch {
+    return false;
+  }
+}
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  // Basic auth check (use the same admin credentials)
-  const authHeader = req.headers.authorization;
-  
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+  // Verify authentication
+  if (!isAuthenticated(req)) {
     return res.status(401).json({ error: "Unauthorized" });
   }
 
-  const token = authHeader.substring(7);
-  const [email, password] = Buffer.from(token, "base64").toString().split(":");
+  try {
+    // GET: Fetch all participants
+    if (req.method === "GET") {
+      console.log("📊 Fetching all participants from database...");
+      
+      const participants = await DatabaseAdapter.getAllParticipants();
 
-  if (
-    email !== process.env.ADMIN_EMAIL ||
-    password !== process.env.ADMIN_PASSWORD
-  ) {
-    return res.status(401).json({ error: "Invalid credentials" });
-  }
-
-  // GET - List all participants
-  if (req.method === "GET") {
-    try {
-      const { data, error } = await supabase
-        .from("participants")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
-
-      return res.status(200).json({ participants: data || [] });
-    } catch (error) {
-      console.error("Error fetching participants:", error);
-      return res.status(500).json({ error: "Failed to fetch participants" });
+      console.log(`✅ Fetched ${participants.length} participants`);
+      
+      return res.status(200).json({
+        success: true,
+        participants
+      });
     }
-  }
 
-  // POST - Create new participant manually
-  if (req.method === "POST") {
-    try {
+    // POST: Create new participant
+    if (req.method === "POST") {
       const { name, email, phone, payment_status } = req.body;
-
+      
       if (!name || !email || !phone) {
-        return res.status(400).json({ error: "Missing required fields" });
+        return res.status(400).json({
+          success: false,
+          error: "Missing required fields"
+        });
       }
 
-      // Generate unique QR code ID
-      const qrCodeId = `PNL-MANUAL-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      console.log("➕ Creating new participant:", { name, email, phone });
 
-      const { data, error } = await supabase
-        .from("participants")
-        .insert({
-          name,
-          email,
-          phone,
-          qr_code_id: qrCodeId,
-          payment_status: payment_status || "paid",
-          attendance_status: "pending"
-        })
-        .select()
-        .single();
+      // Generate QR code ID
+      const qrCodeId = `PNL-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
-      if (error) throw error;
+      const participant = await DatabaseAdapter.createParticipant({
+        name,
+        email,
+        phone,
+        qr_code_id: qrCodeId,
+        payment_status: payment_status || "paid",
+        attendance_status: "pending"
+      });
 
-      return res.status(201).json({ participant: data });
-    } catch (error) {
-      console.error("Error creating participant:", error);
-      return res.status(500).json({ error: "Failed to create participant" });
+      if (!participant) {
+        throw new Error("Failed to create participant");
+      }
+
+      console.log("✅ Participant created:", participant.id);
+
+      return res.status(201).json({
+        success: true,
+        participant
+      });
     }
-  }
 
-  // PATCH - Update participant
-  if (req.method === "PATCH") {
-    try {
+    // PATCH: Update participant
+    if (req.method === "PATCH") {
       const { id, payment_status, attendance_status } = req.body;
 
       if (!id) {
-        return res.status(400).json({ error: "Missing participant ID" });
+        return res.status(400).json({
+          success: false,
+          error: "Participant ID is required"
+        });
       }
 
-      const updates: any = { updated_at: new Date().toISOString() };
+      console.log("🔄 Updating participant:", { id, payment_status, attendance_status });
+
+      const updates: any = {};
       if (payment_status) updates.payment_status = payment_status;
       if (attendance_status) updates.attendance_status = attendance_status;
 
-      const { data, error } = await supabase
-        .from("participants")
-        .update(updates)
-        .eq("id", id)
-        .select()
-        .single();
+      const participant = await DatabaseAdapter.updateParticipant(id, updates);
 
-      if (error) throw error;
+      if (!participant) {
+        throw new Error("Failed to update participant");
+      }
 
-      return res.status(200).json({ participant: data });
-    } catch (error) {
-      console.error("Error updating participant:", error);
-      return res.status(500).json({ error: "Failed to update participant" });
+      console.log("✅ Participant updated:", participant.id);
+
+      return res.status(200).json({
+        success: true,
+        participant
+      });
     }
-  }
 
-  // DELETE - Remove participant
-  if (req.method === "DELETE") {
-    try {
+    // DELETE: Delete participant
+    if (req.method === "DELETE") {
       const { id } = req.query;
 
       if (!id || typeof id !== "string") {
-        return res.status(400).json({ error: "Missing participant ID" });
+        return res.status(400).json({
+          success: false,
+          error: "Participant ID is required"
+        });
       }
 
-      const { error } = await supabase
-        .from("participants")
-        .delete()
-        .eq("id", id);
+      console.log("🗑️ Deleting participant:", id);
 
-      if (error) throw error;
+      const success = await DatabaseAdapter.deleteParticipant(id);
 
-      return res.status(200).json({ message: "Participant deleted successfully" });
-    } catch (error) {
-      console.error("Error deleting participant:", error);
-      return res.status(500).json({ error: "Failed to delete participant" });
+      if (!success) {
+        throw new Error("Failed to delete participant");
+      }
+
+      console.log("✅ Participant deleted:", id);
+
+      return res.status(200).json({
+        success: true,
+        message: "Participant deleted successfully"
+      });
     }
-  }
 
-  return res.status(405).json({ error: "Method not allowed" });
+    return res.status(405).json({ error: "Method not allowed" });
+
+  } catch (error) {
+    console.error("❌ API error:", error);
+    
+    return res.status(500).json({
+      success: false,
+      error: "Internal server error",
+      details: error instanceof Error ? error.message : "Unknown error"
+    });
+  }
 }
