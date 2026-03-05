@@ -6,58 +6,32 @@ type ParticipantInsert = Database["public"]["Tables"]["participants"]["Insert"];
 type ParticipantUpdate = Database["public"]["Tables"]["participants"]["Update"];
 
 /**
- * Database Adapter - Works in both development and production
- * Falls back to direct SQL queries if Supabase client fails
+ * Database Adapter - Direct connection to Supabase
+ * Simplified version without connection testing
  */
 
 export class DatabaseAdapter {
-  private static isSupabaseAvailable: boolean | null = null;
-
-  /**
-   * Test Supabase connection
-   */
-  private static async testConnection(): Promise<boolean> {
-    if (this.isSupabaseAvailable !== null) {
-      return this.isSupabaseAvailable;
-    }
-
-    try {
-      const { error } = await supabase
-        .from("participants")
-        .select("id")
-        .limit(1);
-
-      this.isSupabaseAvailable = !error;
-      return this.isSupabaseAvailable;
-    } catch {
-      this.isSupabaseAvailable = false;
-      return false;
-    }
-  }
-
   /**
    * Get all participants
    */
   static async getAllParticipants(): Promise<Participant[]> {
     try {
-      const isAvailable = await this.testConnection();
+      console.log("📊 DatabaseAdapter: Fetching all participants...");
+      
+      const { data, error } = await supabase
+        .from("participants")
+        .select("*")
+        .order("created_at", { ascending: false });
 
-      if (isAvailable) {
-        const { data, error } = await supabase
-          .from("participants")
-          .select("*")
-          .order("created_at", { ascending: false });
-
-        if (!error && data) {
-          return data;
-        }
+      if (error) {
+        console.error("❌ DatabaseAdapter: Error fetching participants:", error);
+        return [];
       }
 
-      // Fallback: This will fail in browser but work in API routes
-      console.log("⚠️ Using direct SQL fallback for participants");
-      return [];
+      console.log(`✅ DatabaseAdapter: Fetched ${data?.length || 0} participants`);
+      return data || [];
     } catch (error) {
-      console.error("❌ Error fetching participants:", error);
+      console.error("❌ DatabaseAdapter: Exception fetching participants:", error);
       return [];
     }
   }
@@ -67,24 +41,32 @@ export class DatabaseAdapter {
    */
   static async createParticipant(participant: ParticipantInsert): Promise<Participant | null> {
     try {
-      const isAvailable = await this.testConnection();
+      console.log("💾 DatabaseAdapter: Creating participant:", {
+        name: participant.name,
+        email: participant.email,
+        phone: participant.phone
+      });
 
-      if (isAvailable) {
-        const { data, error } = await supabase
-          .from("participants")
-          .insert([participant])
-          .select()
-          .single();
+      const { data, error } = await supabase
+        .from("participants")
+        .insert([participant])
+        .select()
+        .single();
 
-        if (!error && data) {
-          return data;
-        }
+      if (error) {
+        console.error("❌ DatabaseAdapter: Error creating participant:", error);
+        return null;
       }
 
-      console.log("⚠️ Supabase not available for insert");
+      if (data) {
+        console.log("✅ DatabaseAdapter: Participant created successfully:", data.id);
+        return data;
+      }
+
+      console.log("⚠️ DatabaseAdapter: No data returned from insert");
       return null;
     } catch (error) {
-      console.error("❌ Error creating participant:", error);
+      console.error("❌ DatabaseAdapter: Exception creating participant:", error);
       return null;
     }
   }
@@ -97,25 +79,28 @@ export class DatabaseAdapter {
     updates: ParticipantUpdate
   ): Promise<Participant | null> {
     try {
-      const isAvailable = await this.testConnection();
+      console.log("🔄 DatabaseAdapter: Updating participant:", id);
 
-      if (isAvailable) {
-        const { data, error } = await supabase
-          .from("participants")
-          .update({ ...updates, updated_at: new Date().toISOString() })
-          .eq("id", id)
-          .select()
-          .single();
+      const { data, error } = await supabase
+        .from("participants")
+        .update({ ...updates, updated_at: new Date().toISOString() })
+        .eq("id", id)
+        .select()
+        .single();
 
-        if (!error && data) {
-          return data;
-        }
+      if (error) {
+        console.error("❌ DatabaseAdapter: Error updating participant:", error);
+        return null;
       }
 
-      console.log("⚠️ Supabase not available for update");
+      if (data) {
+        console.log("✅ DatabaseAdapter: Participant updated successfully:", data.id);
+        return data;
+      }
+
       return null;
     } catch (error) {
-      console.error("❌ Error updating participant:", error);
+      console.error("❌ DatabaseAdapter: Exception updating participant:", error);
       return null;
     }
   }
@@ -125,21 +110,22 @@ export class DatabaseAdapter {
    */
   static async deleteParticipant(id: string): Promise<boolean> {
     try {
-      const isAvailable = await this.testConnection();
+      console.log("🗑️ DatabaseAdapter: Deleting participant:", id);
 
-      if (isAvailable) {
-        const { error } = await supabase
-          .from("participants")
-          .delete()
-          .eq("id", id);
+      const { error } = await supabase
+        .from("participants")
+        .delete()
+        .eq("id", id);
 
-        return !error;
+      if (error) {
+        console.error("❌ DatabaseAdapter: Error deleting participant:", error);
+        return false;
       }
 
-      console.log("⚠️ Supabase not available for delete");
-      return false;
+      console.log("✅ DatabaseAdapter: Participant deleted successfully");
+      return true;
     } catch (error) {
-      console.error("❌ Error deleting participant:", error);
+      console.error("❌ DatabaseAdapter: Exception deleting participant:", error);
       return false;
     }
   }
@@ -149,24 +135,59 @@ export class DatabaseAdapter {
    */
   static async getParticipantByQRCode(qrCodeId: string): Promise<Participant | null> {
     try {
-      const isAvailable = await this.testConnection();
+      console.log("🔍 DatabaseAdapter: Looking up participant by QR:", qrCodeId);
 
-      if (isAvailable) {
-        const { data, error } = await supabase
-          .from("participants")
-          .select("*")
-          .eq("qr_code_id", qrCodeId)
-          .maybeSingle();
+      const { data, error } = await supabase
+        .from("participants")
+        .select("*")
+        .eq("qr_code_id", qrCodeId)
+        .maybeSingle();
 
-        if (!error && data) {
-          return data;
-        }
+      if (error) {
+        console.error("❌ DatabaseAdapter: Error fetching participant by QR:", error);
+        return null;
       }
 
-      console.log("⚠️ Supabase not available for QR lookup");
+      if (data) {
+        console.log("✅ DatabaseAdapter: Found participant:", data.name);
+        return data;
+      }
+
+      console.log("⚠️ DatabaseAdapter: No participant found with QR:", qrCodeId);
       return null;
     } catch (error) {
-      console.error("❌ Error fetching participant by QR:", error);
+      console.error("❌ DatabaseAdapter: Exception fetching participant by QR:", error);
+      return null;
+    }
+  }
+
+  /**
+   * Get participant by email
+   */
+  static async getParticipantByEmail(email: string): Promise<Participant | null> {
+    try {
+      console.log("🔍 DatabaseAdapter: Looking up participant by email:", email);
+
+      const { data, error } = await supabase
+        .from("participants")
+        .select("*")
+        .eq("email", email)
+        .maybeSingle();
+
+      if (error) {
+        console.error("❌ DatabaseAdapter: Error fetching participant by email:", error);
+        return null;
+      }
+
+      if (data) {
+        console.log("✅ DatabaseAdapter: Found participant:", data.name);
+        return data;
+      }
+
+      console.log("⚠️ DatabaseAdapter: No participant found with email:", email);
+      return null;
+    } catch (error) {
+      console.error("❌ DatabaseAdapter: Exception fetching participant by email:", error);
       return null;
     }
   }
