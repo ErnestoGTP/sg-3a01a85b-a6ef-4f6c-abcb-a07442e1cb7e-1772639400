@@ -282,6 +282,12 @@ export default function AdminLogin() {
                 {error && (
                   <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3 text-sm text-red-400">
                     {error}
+                    {error.includes("Credenciales") && (
+                      <div className="mt-2 text-xs opacity-70">
+                        <p>💡 Sugerencia: Verifica que el password sea exactamente: <code className="bg-black/20 px-1 py-0.5 rounded">Ramitap2025!</code></p>
+                        <p className="mt-1">Si el problema persiste, usa "¿Olvidaste tu contraseña?" para resetear.</p>
+                      </div>
+                    )}
                   </div>
                 )}
 
