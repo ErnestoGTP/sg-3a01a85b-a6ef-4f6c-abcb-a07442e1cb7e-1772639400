@@ -52,9 +52,9 @@ export default async function handler(
 
     try {
       const participant = await DatabaseAdapter.createParticipant({
-        name: data.name,
-        email: data.email,
-        phone: data.phone,
+        name,
+        email,
+        phone,
         qr_code_id: qrCodeId,
         payment_status: "pending",
         attendance_status: "pending",
@@ -159,8 +159,6 @@ export default async function handler(
     // ALWAYS RETURN SUCCESS (ANTI-BLOCKING)
     // ========================================
     console.log("✅ Registration completed successfully for:", email);
-    console.log("   - Database saved:", participantId ? "YES ✅" : "NO ❌");
-    console.log("   - Participant ID:", participantId);
     
     return res.status(200).json({
       success: true,
