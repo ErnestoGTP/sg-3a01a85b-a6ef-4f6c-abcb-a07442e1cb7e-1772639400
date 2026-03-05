@@ -40,7 +40,7 @@ export default async function handler(
 
       console.log("\n📧 SENDING TEST EMAIL TO:", to, "\n");
 
-      const result = await sendEmail({
+      const emailResult = await sendEmail({
         to,
         subject: "Test Email - PNL Fundamental",
         html: `
@@ -61,8 +61,7 @@ export default async function handler(
               </p>
               <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 30px 0;">
               <p style="color: #718096; font-size: 14px;">
-                <strong>Sent via:</strong> ${result.provider}<br>
-                <strong>Message ID:</strong> ${result.messageId || "N/A"}<br>
+                <strong>Sent via:</strong> ${process.env.RESEND_API_KEY ? "Resend/Gmail" : "Gmail"}<br>
                 <strong>Timestamp:</strong> ${new Date().toISOString()}
               </p>
             </div>
@@ -71,18 +70,18 @@ export default async function handler(
         `,
       });
 
-      if (result.success) {
+      if (emailResult.success) {
         return res.status(200).json({
           success: true,
-          message: `Test email sent successfully via ${result.provider}`,
-          provider: result.provider,
-          messageId: result.messageId,
+          message: `Test email sent successfully via ${emailResult.provider}`,
+          provider: emailResult.provider,
+          messageId: emailResult.messageId,
         });
       } else {
         return res.status(500).json({
           success: false,
           message: "Failed to send test email",
-          error: result.error,
+          error: emailResult.error,
         });
       }
     } catch (error) {
