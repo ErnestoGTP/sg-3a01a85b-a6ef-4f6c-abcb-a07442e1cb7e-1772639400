@@ -19,15 +19,8 @@ async function verifyToken(token: string): Promise<boolean> {
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Skip middleware for login page, API auth endpoint, and public routes
-  if (
-    pathname === "/admin/login" || 
-    pathname === "/admin/forgot-password" ||
-    pathname === "/admin/reset-password" ||
-    pathname === "/api/admin/auth" ||
-    pathname === "/api/admin/recover-password" ||
-    pathname === "/api/admin/reset-password"
-  ) {
+  // Skip middleware for login page and API auth endpoint
+  if (pathname === "/admin/login" || pathname === "/api/admin/auth") {
     return NextResponse.next();
   }
 

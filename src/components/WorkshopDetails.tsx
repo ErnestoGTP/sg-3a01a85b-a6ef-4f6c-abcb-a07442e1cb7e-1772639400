@@ -22,16 +22,6 @@ export function WorkshopDetails({ onCTAClick, config = defaultConfig }: Workshop
     duration: config.event?.duration || "2 horas"
   };
 
-  const handleCTAClick = () => {
-    // Smooth scroll to registration form
-    const registrationSection = document.getElementById("registro");
-    if (registrationSection) {
-      registrationSection.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-    // Call parent callback
-    onCTAClick();
-  };
-
   const details = [
     {
       icon: Award,
@@ -132,7 +122,7 @@ export function WorkshopDetails({ onCTAClick, config = defaultConfig }: Workshop
                   <span className="font-bold text-[#C6A75E]">Inversión única:</span> {safeConfig.price} — Pago completo
                 </p>
                 <Button
-                  onClick={handleCTAClick}
+                  onClick={onCTAClick}
                   size="lg"
                   className="bg-[#C6A75E] hover:bg-[#d4b76f] text-[#0B1C2D] font-bold text-lg px-8 py-6 rounded-full shadow-lg shadow-[#C6A75E]/30 hover:shadow-xl hover:shadow-[#C6A75E]/40 transition-all duration-300 hover:scale-105"
                 >

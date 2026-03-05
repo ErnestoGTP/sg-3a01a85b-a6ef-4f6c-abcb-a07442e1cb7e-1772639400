@@ -87,31 +87,6 @@ export function RegistrationForm() {
         setIsSuccess(true);
         reset();
 
-        // TRACKING: Fire Meta Pixel Lead event
-        if (typeof window !== "undefined" && (window as any).fbq) {
-          (window as any).fbq("track", "Lead", {
-            content_name: "Taller de PNL Fundamental",
-            content_category: "Workshop Registration",
-            value: 800,
-            currency: "MXN"
-          });
-          console.log("📊 Meta Pixel Lead event fired");
-        }
-
-        // TRACKING: Fire GTM CompleteRegistration event
-        if (typeof window !== "undefined" && (window as any).dataLayer) {
-          (window as any).dataLayer.push({
-            event: "complete_registration",
-            event_category: "Workshop",
-            event_label: "PNL Fundamental Registration",
-            value: 800,
-            currency: "MXN",
-            user_email: data.email,
-            user_name: data.name
-          });
-          console.log("📊 GTM CompleteRegistration event fired");
-        }
-
         // Scroll to payment instructions
         setTimeout(() => {
           const paymentInstructions = document.getElementById("payment-instructions");
@@ -119,12 +94,6 @@ export function RegistrationForm() {
             paymentInstructions.scrollIntoView({ behavior: "smooth", block: "center" });
           }
         }, 100);
-
-        // Redirect to thank you page after showing payment instructions (optional)
-        // Uncomment if you want to redirect instead of showing inline payment instructions
-        // setTimeout(() => {
-        //   window.location.href = "/gracias";
-        // }, 2000);
       } else {
         // Only show error for non-200 responses (validation errors)
         throw new Error(result.error || "Error al procesar el registro");

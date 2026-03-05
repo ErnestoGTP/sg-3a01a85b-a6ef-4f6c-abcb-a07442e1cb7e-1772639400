@@ -22,16 +22,6 @@ export function Hero({ onCTAClick, config = defaultConfig }: HeroProps) {
     "Grupo reducido y cupos limitados"
   ];
 
-  const handleCTAClick = () => {
-    // Smooth scroll to registration form
-    const registrationSection = document.getElementById("registro");
-    if (registrationSection) {
-      registrationSection.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-    // Call parent callback
-    onCTAClick();
-  };
-
   return (
     <section className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0B1C2D] via-[#1a2f45] to-[#0B1C2D] text-white overflow-hidden">
       {/* Background Pattern */}
@@ -98,7 +88,7 @@ export function Hero({ onCTAClick, config = defaultConfig }: HeroProps) {
             className="mb-6"
           >
             <Button
-              onClick={handleCTAClick}
+              onClick={onCTAClick}
               size="lg"
               className="bg-[#C6A75E] hover:bg-[#d4b76f] text-[#0B1C2D] font-bold text-lg px-10 py-7 rounded-full shadow-2xl shadow-[#C6A75E]/40 hover:shadow-[#C6A75E]/60 transition-all duration-300 hover:scale-105"
             >
