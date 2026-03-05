@@ -1,9 +1,9 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import nodemailer from "nodemailer";
 import QRCode from "qrcode";
 import { z } from "zod";
 import { DatabaseAdapter } from "@/lib/dbAdapter";
 import { workshopConfig } from "@/config/workshop";
+import { sendEmail } from "@/lib/emailService";
 
 // Validation schema
 const registrationSchema = z.object({
@@ -96,30 +96,11 @@ export default async function handler(
     try {
       console.log("📧 STEP 3: Sending confirmation email...");
       
-      // Check if SMTP is configured
-      if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
-        console.error("❌ SMTP not configured - missing environment variables");
-        throw new Error("SMTP configuration missing");
-      }
-
-      // Create transporter with Gmail SMTP (SSL)
-      const transporter = nodemailer.createTransport({
-        host: process.env.SMTP_HOST,
-        port: Number(process.env.SMTP_PORT) || 465,
-        secure: true, // SSL for port 465
-        auth: {
-          user: process.env.SMTP_USER,
-          pass: process.env.SMTP_PASS,
-        },
-      });
-
-      console.log("✅ Transporter created successfully");
-
       // Prepare email HTML
       const emailHtml = generateEmailHtml({ name, email, phone });
       
       // Prepare attachments
-      const attachments: any[] = [];
+      const attachments: Array<{ content: Buffer; filename: string; cid: string }> = [];
       if (qrCodeDataUrl) {
         const base64Match = qrCodeDataUrl.match(/^data:image\/png;base64,(.+)$/);
         if (base64Match && base64Match[1]) {
@@ -131,28 +112,23 @@ export default async function handler(
         }
       }
 
-      // Email options
-      const mailOptions: any = {
-        from: process.env.EMAIL_FROM || "Ramitap Training <ramitaptraining@gmail.com>",
+      // Send email using dual provider service
+      const result = await sendEmail({
         to: email,
         subject: "Tu pase y siguientes pasos – Taller de PNL Fundamental",
         html: emailHtml,
-      };
+        attachments: attachments.length > 0 ? attachments : undefined,
+      });
 
-      if (attachments.length > 0) {
-        mailOptions.attachments = attachments;
+      if (result.success) {
+        console.log(`✅ STEP 3 SUCCESS: Email sent via ${result.provider}:`, result.messageId);
+      } else {
+        console.error("⚠️ STEP 3 FAILED: Email sending error (non-blocking):", result.error);
       }
-
-      console.log("📤 Sending email to:", email);
-
-      // Send email
-      const info = await transporter.sendMail(mailOptions);
-      console.log("✅ STEP 3 SUCCESS: Email sent successfully:", info.messageId);
 
     } catch (emailError) {
       console.error("⚠️ STEP 3 FAILED: Email sending error (non-blocking):", emailError);
       // CRITICAL: Don't throw - continue to success response
-      // User must reach payment screen even if email fails
     }
 
     // ========================================
